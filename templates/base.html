@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SecureChat Pro{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a'
+                        },
+                        admin: {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                            800: '#991b1b',
+                            900: '#7f1d1d'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+    <!-- Navigation Header -->
+    <nav class="{% if session.admin_id %}bg-admin-600{% else %}bg-primary-600{% endif %} shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo and Brand -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <div class="w-8 h-8 {% if session.admin_id %}bg-admin-800{% else %}bg-primary-800{% endif %} rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-shield-alt text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-white text-xl font-semibold">
+                            {% if session.admin_id %}
+                                SecureChat <span class="text-admin-200">Admin</span>
+                            {% else %}
+                                SecureChat <span class="text-primary-200">Pro</span>
+                            {% endif %}
+                        </h1>
+                    </div>
+                </div>
+
+                <!-- User Info and Actions -->
+                <div class="flex items-center space-x-4">
+                    {% if session.username or session.admin_username %}
+                        <!-- User Avatar and Name -->
+                        <div class="flex items-center space-x-3">
+                            <div class="hidden md:block text-right">
+                                <div class="text-white text-sm font-medium">
+                                    {{ session.admin_username or session.username }}
+                                </div>
+                                <div class="{% if session.admin_id %}text-admin-200{% else %}text-primary-200{% endif %} text-xs">
+                                    {% if session.admin_id %}System Administrator{% else %}User{% endif %}
+                                </div>
+                            </div>
+                            <div class="w-8 h-8 {% if session.admin_id %}bg-admin-500{% else %}bg-primary-500{% endif %} rounded-full flex items-center justify-center">
+                                <span class="text-white text-sm font-semibold">
+                                    {{ (session.admin_username or session.username)[0].upper() }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Logout Button -->
+                        <a href="{{ url_for('logout') }}" 
+                           class="{% if session.admin_id %}bg-admin-700 hover:bg-admin-800{% else %}bg-primary-700 hover:bg-primary-800{% endif %} text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center">
+                            <i class="fas fa-sign-out-alt mr-2"></i>
+                            <span class="hidden sm:inline">Sign Out</span>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-20 right-4 z-[9999] space-y-2 max-w-sm" style="z-index: 99999; position: fixed; top: 80px; right: 16px; max-width: 320px;">
+        <!-- Toasts will be dynamically added here -->
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9998] hidden" style="z-index: 9998;">
+        <div class="bg-white rounded-lg p-6 flex items-center space-x-3 shadow-xl">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+            <span class="text-gray-700 font-medium">Loading...</span>
+        </div>
+    </div>
+
+    <script>
+        // Toast System
+        class ToastManager {
+            constructor() {
+                this.container = document.getElementById('toastContainer');
+                // Ensure container has highest z-index
+                if (this.container) {
+                    this.container.style.zIndex = '99999';
+                    this.container.style.position = 'fixed';
+                }
+            }
+
+            show(message, type = 'info', duration = 5000) {
+                if (!this.container) {
+                    console.error('Toast container not found');
+                    return;
+                }
+                
+                const toast = this.createToast(message, type);
+                this.container.appendChild(toast);
+
+                // Force reflow
+                toast.offsetHeight;
+
+                // Animate in
+                setTimeout(() => {
+                    toast.classList.add('translate-x-0', 'opacity-100');
+                    toast.classList.remove('translate-x-full', 'opacity-0');
+                }, 10);
+
+                // Auto remove
+                setTimeout(() => {
+                    this.removeToast(toast);
+                }, duration);
+
+                return toast;
+            }
+
+            createToast(message, type) {
+                const toast = document.createElement('div');
+                toast.className = `transform transition-all duration-500 translate-x-full opacity-0 w-80 bg-white shadow-2xl rounded-xl pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden mb-3`;
+                toast.style.zIndex = '999999';
+                toast.style.position = 'relative';
+                toast.style.maxWidth = '320px';
+                toast.style.width = '320px';
+
+                const colors = {
+                    success: { bg: 'bg-green-500', icon: 'fa-check-circle', border: 'border-green-200' },
+                    error: { bg: 'bg-red-500', icon: 'fa-times-circle', border: 'border-red-200' },
+                    warning: { bg: 'bg-yellow-500', icon: 'fa-exclamation-triangle', border: 'border-yellow-200' },
+                    info: { bg: 'bg-blue-500', icon: 'fa-info-circle', border: 'border-blue-200' }
+                };
+
+                const config = colors[type] || colors.info;
+
+                toast.innerHTML = `
+                    <div class="p-4 ${config.border} border-l-4">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 ${config.bg} rounded-full flex items-center justify-center shadow-sm">
+                                    <i class="fas ${config.icon} text-white text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="ml-3 w-0 flex-1 pt-0.5">
+                                <p class="text-sm font-semibold text-gray-900 leading-5">${message}</p>
+                            </div>
+                            <div class="ml-4 flex-shrink-0 flex">
+                                <button onclick="toastManager.removeToast(this.closest('[class*=\"transform\"]'))" 
+                                        class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 p-1.5 hover:bg-gray-50 transition-colors duration-200">
+                                    <i class="fas fa-times text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                return toast;
+            }
+
+            removeToast(toast) {
+                toast.classList.add('translate-x-full', 'opacity-0');
+                toast.classList.remove('translate-x-0', 'opacity-100');
+                
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }
+
+            success(message, duration = 5000) {
+                return this.show(message, 'success', duration);
+            }
+
+            error(message, duration = 7000) {
+                return this.show(message, 'error', duration);
+            }
+
+            warning(message, duration = 6000) {
+                return this.show(message, 'warning', duration);
+            }
+
+            info(message, duration = 5000) {
+                return this.show(message, 'info', duration);
+            }
+        }
+
+        // Initialize toast manager
+        const toastManager = new ToastManager();
+
+        // Add CSS to ensure toasts are always on top
+        const toastStyles = document.createElement('style');
+        toastStyles.textContent = `
+            #toastContainer {
+                position: fixed !important;
+                top: 80px !important;
+                right: 16px !important;
+                z-index: 999999 !important;
+                pointer-events: none !important;
+                max-width: 320px !important;
+                width: 320px !important;
+            }
+            
+            #toastContainer > div {
+                pointer-events: auto !important;
+                z-index: 999999 !important;
+                position: relative !important;
+                width: 320px !important;
+                max-width: 320px !important;
+                margin-bottom: 12px !important;
+            }
+            
+            /* Ensure toasts appear above all other elements */
+            .toast-notification {
+                position: relative !important;
+                z-index: 999999 !important;
+                width: 320px !important;
+                max-width: 320px !important;
+            }
+            
+            /* Responsive adjustments for smaller screens */
+            @media (max-width: 640px) {
+                #toastContainer {
+                    right: 8px !important;
+                    left: 8px !important;
+                    width: auto !important;
+                    max-width: calc(100vw - 16px) !important;
+                }
+                
+                #toastContainer > div {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                }
+            }
+            
+            /* Animation improvements */
+            .toast-slide-in {
+                animation: slideInFromRight 0.5s ease-out forwards;
+            }
+            
+            .toast-slide-out {
+                animation: slideOutToRight 0.3s ease-in forwards;
+            }
+            
+            @keyframes slideInFromRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes slideOutToRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(toastStyles);
+
+        // Global utility functions
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        // Test toast function (for debugging)
+        window.testToast = function() {
+            toastManager.success('Test toast notification!');
+        };
+
+        // Process Flask flash messages and convert to toasts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure toast container exists and is properly positioned
+            const container = document.getElementById('toastContainer');
+            if (container) {
+                container.style.position = 'fixed';
+                container.style.top = '80px';
+                container.style.right = '16px';
+                container.style.zIndex = '999999';
+                container.style.pointerEvents = 'none';
+                container.style.maxWidth = '320px';
+                container.style.width = '320px';
+                
+                // For mobile devices, adjust positioning
+                if (window.innerWidth < 640) {
+                    container.style.left = '8px';
+                    container.style.right = '8px';
+                    container.style.width = 'auto';
+                    container.style.maxWidth = 'calc(100vw - 16px)';
+                }
+            }
+            
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        // Determine toast type based on message content
+                        let toastType = 'info';
+                        const messageText = '{{ message|safe }}';
+                        
+                        if (messageText.toLowerCase().includes('error') || 
+                            messageText.toLowerCase().includes('failed') || 
+                            messageText.toLowerCase().includes('invalid') ||
+                            messageText.toLowerCase().includes('blocked')) {
+                            toastType = 'error';
+                        } else if (messageText.toLowerCase().includes('success') || 
+                                   messageText.toLowerCase().includes('welcome') ||
+                                   messageText.toLowerCase().includes('created') ||
+                                   messageText.toLowerCase().includes('deleted')) {
+                            toastType = 'success';
+                        } else if (messageText.toLowerCase().includes('warning') ||
+                                   messageText.toLowerCase().includes('cannot')) {
+                            toastType = 'warning';
+                        }
+                        
+                        // Delay to ensure DOM is ready and add staggered timing for multiple messages
+                        setTimeout(() => {
+                            toastManager.show(messageText, toastType);
+                        }, 200 + ({{ loop.index0 }} * 500));
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            // Add window resize handler for responsive positioning
+            window.addEventListener('resize', function() {
+                const container = document.getElementById('toastContainer');
+                if (container) {
+                    if (window.innerWidth < 640) {
+                        container.style.left = '8px';
+                        container.style.right = '8px';
+                        container.style.width = 'auto';
+                        container.style.maxWidth = 'calc(100vw - 16px)';
+                    } else {
+                        container.style.left = 'auto';
+                        container.style.right = '16px';
+                        container.style.width = '320px';
+                        container.style.maxWidth = '320px';
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

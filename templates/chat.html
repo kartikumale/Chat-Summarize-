@@ -1,0 +1,727 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ chat_info.name }} - SecureChat Pro{% endblock %}
+
+{% block content %}
+<div class="h-screen flex flex-col bg-white pb-12">
+    <div class="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                {% if chat_info.is_admin_view %}
+                    <a href="{{ url_for('admin_groups') if chat_info.type == 'group' else url_for('admin_dashboard') }}" 
+                       class="inline-flex items-center text-admin-600 hover:text-admin-700 transition-colors duration-200 group">
+                        <i class="fas fa-arrow-left mr-2 group-hover:-translate-x-1 transition-transform duration-200"></i>
+                        <span class="hidden sm:inline font-medium">Back to Admin</span>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('dashboard') }}" 
+                       class="inline-flex items-center text-primary-600 hover:text-primary-700 transition-colors duration-200 group">
+                        <i class="fas fa-arrow-left mr-2 group-hover:-translate-x-1 transition-transform duration-200"></i>
+                        <span class="hidden sm:inline font-medium">Dashboard</span>
+                    </a>
+                {% endif %}
+
+                <div class="flex items-center space-x-3">
+                    <div class="relative">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center {% if chat_info.type == 'private' %}bg-gradient-to-br from-primary-500 to-primary-600{% else %}bg-gradient-to-br from-purple-500 to-purple-600{% endif %} shadow-sm">
+                            {% if chat_info.type == 'private' %}
+                                <i class="fas fa-user text-white text-lg"></i>
+                            {% else %}
+                                <i class="fas fa-users text-white text-lg"></i>
+                            {% endif %}
+                        </div>
+                        {% if not chat_info.is_admin_view %}
+                            <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900 flex items-center">
+                            {{ chat_info.name }}
+                            {% if chat_info.is_admin_view %}
+                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-admin-100 text-admin-800">
+                                    <i class="fas fa-shield-alt mr-1"></i>Admin View
+                                </span>
+                            {% endif %}
+                        </h1>
+                        <div class="flex items-center space-x-2 text-sm">
+                            {% if chat_info.is_admin_view %}
+                                <span class="flex items-center text-admin-600">
+                                    <div class="w-2 h-2 bg-admin-400 rounded-full mr-2"></div>
+                                    Read-only monitoring mode
+                                </span>
+                            {% elif chat_info.type == 'group' %}
+                                {% if chat_info.can_write %}
+                                    <span class="flex items-center text-green-600">
+                                        <i class="fas fa-edit mr-1"></i>Can send messages
+                                    </span>
+                                {% else %}
+                                    <span class="flex items-center text-yellow-600">
+                                        <i class="fas fa-eye mr-1"></i>Read-only access
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="flex items-center text-green-600">
+                                    <div class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                                    Online now
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                {% if chat_info.is_admin_view and chat_info.type == 'group' %}
+                    <a href="{{ url_for('admin_group_messages', group_id=chat_info.id) }}" 
+                       class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-cog mr-2"></i>
+                        Manage
+                    </a>
+                {% endif %}
+                
+                <a href="{{ url_for('summarize_chat_page', chat_type=chat_info.type, chat_id=chat_info.id) }}" 
+                   class="inline-flex items-center px-3 py-2 border border-blue-300 rounded-lg text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors duration-200">
+                    <i class="fas fa-file-alt mr-2"></i>
+                    Summarize Chat
+                </a>
+                
+                <button onclick="toggleChatInfo()" 
+                        class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+                        title="Chat information">
+                    <i class="fas fa-info-circle"></i>
+                </button>
+                
+                <div class="relative">
+                    <button onclick="toggleChatMenu()" 
+                            class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+                            title="More options">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    
+                    <div id="chatDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                        <div class="py-2">
+                            <a href="{{ url_for('summarize_chat_page', chat_type=chat_info.type, chat_id=chat_info.id) }}" 
+                               class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center">
+                                <i class="fas fa-file-alt mr-2"></i>Chat Summary
+                            </a>
+                            <button onclick="exportChat()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                <i class="fas fa-download mr-2"></i>Export Chat
+                            </button>
+                            {% if not chat_info.is_admin_view %}
+                                <button onclick="clearChat()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <i class="fas fa-trash mr-2"></i>Clear History
+                                </button>
+                            {% endif %}
+                            <button onclick="reportIssue()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                <i class="fas fa-flag mr-2"></i>Report Issue
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex-shrink-0 bg-gray-50 border-b border-gray-200 px-6 py-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <button onclick="scrollToBottom()" 
+                        class="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+                    <i class="fas fa-arrow-down mr-1"></i>
+                    Latest
+                </button>
+                {% if not chat_info.is_admin_view %}
+                    <span class="text-xs text-gray-500">{{ messages|length if messages else 0 }} messages</span>
+                {% endif %}
+            </div>
+            <div class="flex items-center space-x-2">
+                <a href="{{ url_for('summarize_chat_page', chat_type=chat_info.type, chat_id=chat_info.id) }}" 
+                   class="inline-flex items-center px-3 py-1 border border-blue-300 rounded-md text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors duration-200">
+                    <i class="fas fa-magic mr-1"></i>
+                    AI Summary
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div id="messages-container" class="flex-1 min-h-0 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-gray-50 to-gray-100">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message-item animate-fadeIn {% if message.sender_id == session.user_id and not chat_info.is_admin_view %}flex justify-end{% else %}flex justify-start{% endif %}" 
+                     data-message-id="{{ message.id }}">
+                    <div class="max-w-xs lg:max-w-md xl:max-w-lg">
+                        {% if message.sender_id != session.user_id or chat_info.is_admin_view %}
+                            <div class="flex items-center space-x-2 mb-2">
+                                <div class="w-6 h-6 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center shadow-sm">
+                                    <span class="text-white text-xs font-bold">
+                                        {{ message.sender_username[0].upper() }}
+                                    </span>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700">{{ message.sender_username }}</span>
+                                <time class="text-xs text-gray-500">{{ message.created_at.split('.')[0] if message.created_at else 'Unknown' }}</time>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="relative group">
+                            <div class="{% if message.sender_id == session.user_id and not chat_info.is_admin_view %}bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-l-2xl rounded-tr-2xl rounded-br-md shadow-lg{% else %}bg-white text-gray-900 rounded-r-2xl rounded-tl-2xl rounded-bl-md border border-gray-200 shadow-sm{% endif %} px-4 py-3 hover:shadow-md transition-shadow duration-200">
+                                
+                                {% if message.media_filename %}
+                                    <div class="mb-3">
+                                        {% if message.media_type in ['jpg', 'jpeg', 'png', 'gif'] %}
+                                            <div class="rounded-xl overflow-hidden cursor-pointer transform hover:scale-105 transition-transform duration-200" 
+                                                 onclick="openImageModal('{{ url_for('uploaded_file', filename=message.media_filename) }}')">
+                                                <img src="{{ url_for('uploaded_file', filename=message.media_filename) }}" 
+                                                     alt="Shared image" 
+                                                     class="max-w-full h-auto">
+                                            </div>
+                                        {% elif message.media_type in ['mp4', 'mov', 'avi'] %}
+                                            <video controls class="max-w-full h-auto rounded-xl">
+                                                <source src="{{ url_for('uploaded_file', filename=message.media_filename) }}" 
+                                                        type="video/{{ message.media_type }}">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        {% else %}
+                                            <a href="{{ url_for('uploaded_file', filename=message.media_filename) }}" 
+                                               class="inline-flex items-center space-x-2 p-3 {% if message.sender_id == session.user_id and not chat_info.is_admin_view %}bg-primary-400 hover:bg-primary-300{% else %}bg-gray-100 hover:bg-gray-200{% endif %} rounded-xl transition-colors duration-200" 
+                                               target="_blank">
+                                                <i class="fas fa-download {% if message.sender_id == session.user_id and not chat_info.is_admin_view %}text-white{% else %}text-gray-600{% endif %}"></i>
+                                                <span class="{% if message.sender_id == session.user_id and not chat_info.is_admin_view %}text-white{% else %}text-gray-800{% endif %} text-sm font-medium">
+                                                    {{ message.media_filename.split('_', 2)[-1] if '_' in message.media_filename else message.media_filename }}
+                                                </span>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                                
+                                {% if message.message_text %}
+                                    <p class="text-sm leading-relaxed whitespace-pre-wrap">{{ message.message_text }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            {% if message.sender_id == session.user_id and not chat_info.is_admin_view %}
+                                <div class="text-right mt-1">
+                                    <time class="text-xs text-gray-500">{{ message.created_at.split('.')[0] if message.created_at else 'Unknown' }}</time>
+                                </div>
+                            {% endif %}
+                            
+                            {% if chat_info.is_admin_view %}
+                                <button onclick="deleteMessageAdmin({{ message.id }})" 
+                                        class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600 shadow-lg"
+                                        title="Delete message">
+                                    <i class="fas fa-trash text-xs"></i>
+                                </button>
+                            {% endif %}
+                            
+                            {% if not chat_info.is_admin_view %}
+                                <div class="absolute -top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-1">
+                                    <button onclick="replyToMessage({{ message.id }})" 
+                                            class="p-1 text-gray-400 hover:text-gray-600 text-xs"
+                                            title="Reply">
+                                        <i class="fas fa-reply"></i>
+                                    </button>
+                                    <button onclick="copyMessage('{{ message.message_text|replace("'", "\\'") if message.message_text else "" }}')" 
+                                            class="p-1 text-gray-400 hover:text-gray-600 text-xs"
+                                            title="Copy">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="flex-1 flex items-center justify-center">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                        <i class="fas fa-comments text-gray-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">No messages yet</h3>
+                    {% if not chat_info.is_admin_view and chat_info.can_write %}
+                        <p class="text-gray-500 mb-6">Start the conversation by sending a message below!</p>
+                        <button onclick="focusMessageInput()" 
+                                class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors duration-200">
+                            <i class="fas fa-pen mr-2"></i>
+                            Send First Message
+                        </button>
+                    {% else %}
+                        <p class="text-gray-500 mb-6">Messages will appear here when the conversation begins.</p>
+                        <a href="{{ url_for('summarize_chat_page', chat_type=chat_info.type, chat_id=chat_info.id) }}" 
+                           class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                            <i class="fas fa-file-alt mr-2"></i>
+                            View Chat Summary
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if chat_info.can_write and not chat_info.is_admin_view %}
+    <div class="flex-shrink-0 bg-white border-t border-gray-200 p-4">
+        <form method="POST" action="{{ url_for('send_message') }}" enctype="multipart/form-data" 
+              class="space-y-4" onsubmit="handleSendMessage(event)">
+            <input type="hidden" name="chat_type" value="{{ chat_info.type }}">
+            <input type="hidden" name="chat_id" value="{{ chat_info.id }}">
+            
+            <div id="replyPreview" class="hidden bg-gray-50 border-l-4 border-primary-500 p-3 rounded-r-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-reply text-primary-500"></i>
+                        <span class="text-sm text-gray-600">Replying to:</span>
+                        <span id="replyText" class="text-sm font-medium text-gray-900"></span>
+                    </div>
+                    <button type="button" onclick="cancelReply()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex items-end space-x-3">
+                <div class="flex-1">
+                    <div class="relative">
+                        <textarea name="message_text" 
+                                  id="messageInput"
+                                  rows="1"
+                                  placeholder="Type your message..." 
+                                  class="block w-full px-4 py-3 pr-20 border border-gray-300 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200 bg-gray-50 hover:bg-white"
+                                  onkeydown="handleKeyDown(event)"
+                                  oninput="autoResize(this)"></textarea>
+                        
+                        <div class="absolute bottom-2 right-2 flex items-center space-x-1">
+                            <button type="button" 
+                                    onclick="toggleEmojiPicker()"
+                                    class="p-2 text-gray-400 hover:text-primary-500 rounded-full hover:bg-gray-100 transition-colors duration-200"
+                                    title="Add emoji">
+                                <i class="fas fa-smile"></i>
+                            </button>
+                            
+                            <button type="button" 
+                                    onclick="document.getElementById('fileInput').click()"
+                                    class="p-2 text-gray-400 hover:text-primary-500 rounded-full hover:bg-gray-100 transition-colors duration-200"
+                                    title="Attach file">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <input type="file" 
+                           id="fileInput"
+                           name="media_file" 
+                           accept=".png,.jpg,.jpeg,.gif,.mp4,.mov,.avi,.pdf,.doc,.docx,.txt" 
+                           class="hidden"
+                           onchange="handleFileSelect(this)">
+                    
+                    <div id="filePreview" class="mt-2 hidden">
+                        <div class="flex items-center space-x-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <i id="fileIcon" class="fas fa-file text-blue-500"></i>
+                            <div class="flex-1">
+                                <span id="fileName" class="text-sm text-gray-700 font-medium"></span>
+                                <div id="fileSize" class="text-xs text-gray-500"></div>
+                            </div>
+                            <button type="button" onclick="clearFile()" 
+                                    class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors duration-200">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" 
+                        id="sendButton"
+                        class="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-full hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105">
+                    <i id="sendIcon" class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            
+            <div class="flex items-center justify-between text-xs text-gray-500">
+                <span class="flex items-center">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Maximum file size: 16MB. Supported: Images, Videos, Documents
+                </span>
+                <div class="flex items-center space-x-2">
+                    <span id="charCount" class="text-gray-400">0 characters</span>
+                    <span class="text-gray-300">•</span>
+                    <kbd class="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs">Enter</kbd>
+                    <span>to send</span>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% elif chat_info.is_admin_view %}
+    <div class="flex-shrink-0 bg-admin-50 border-t border-admin-200 p-4">
+        <div class="flex items-center justify-center text-admin-700 bg-admin-100 rounded-lg p-4">
+            <div class="text-center">
+                <i class="fas fa-shield-alt text-2xl mb-2"></i>
+                <p class="font-medium">Admin viewing mode - Messages cannot be sent from this view</p>
+                <p class="text-xs text-admin-600 mt-1">
+                    To participate in conversations, please log in as a regular user
+                </p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="flex-shrink-0 bg-yellow-50 border-t border-yellow-200 p-4">
+        <div class="flex items-center justify-center text-yellow-700 bg-yellow-100 rounded-lg p-4">
+            <div class="text-center">
+                <i class="fas fa-lock text-2xl mb-2"></i>
+                <p class="font-medium">You have read-only access to this group</p>
+                <p class="text-xs text-yellow-600 mt-1">Contact an administrator to request write access</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="flex-shrink-0 h-2 bg-white"></div>
+
+</div>
+
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 hidden" onclick="closeImageModal()">
+    <div class="relative max-w-4xl max-h-full p-4">
+        <img id="modalImage" src="" alt="Full size image" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+        <button onclick="closeImageModal()" 
+                class="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-opacity-75 transition-all duration-200">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-lg text-sm">
+            Press <kbd class="bg-gray-700 px-2 py-1 rounded">Esc</kbd> to close
+        </div>
+    </div>
+</div>
+<div id="emojiPicker" class="hidden absolute bottom-16 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10">
+    <div class="grid grid-cols-8 gap-2 max-w-xs">
+        <button type="button" onclick="insertEmoji('😀')" class="p-2 hover:bg-gray-100 rounded text-lg">😀</button>
+        <button type="button" onclick="insertEmoji('😊')" class="p-2 hover:bg-gray-100 rounded text-lg">😊</button>
+        <button type="button" onclick="insertEmoji('😂')" class="p-2 hover:bg-gray-100 rounded text-lg">😂</button>
+        <button type="button" onclick="insertEmoji('❤️')" class="p-2 hover:bg-gray-100 rounded text-lg">❤️</button>
+        <button type="button" onclick="insertEmoji('👍')" class="p-2 hover:bg-gray-100 rounded text-lg">👍</button>
+        <button type="button" onclick="insertEmoji('👎')" class="p-2 hover:bg-gray-100 rounded text-lg">👎</button>
+        <button type="button" onclick="insertEmoji('🔥')" class="p-2 hover:bg-gray-100 rounded text-lg">🔥</button>
+        <button type="button" onclick="insertEmoji('💯')" class="p-2 hover:bg-gray-100 rounded text-lg">💯</button>
+    </div>
+</div>
+
+<style>
+  html, body {
+    overflow: hidden;
+  }
+</style>
+
+<script>
+// Chat functionality
+let lastMessageId = {{ messages[-1].id if messages else 0 }};
+let refreshInterval = {{ '10000' if chat_info.is_admin_view else '3000' }};
+let isTyping = false;
+
+function fetchNewMessages() {
+    if (isTyping) return; // Don't refresh while user is typing
+    
+    fetch(`/api/messages/{{ chat_info.type }}/{{ chat_info.id }}?last_id=${lastMessageId}`)
+        .then(response => response.json())
+        .then(messages => {
+            if (messages.length > 0) {
+                const container = document.getElementById('messages-container');
+                
+                messages.forEach(message => {
+                    const messageDiv = createMessageElement(message);
+                    container.appendChild(messageDiv);
+                    lastMessageId = Math.max(lastMessageId, message.id);
+                });
+                
+                scrollToBottom();
+                if (typeof toastManager !== 'undefined') {
+                    toastManager.success(`${messages.length} new message${messages.length > 1 ? 's' : ''} received`);
+                }
+            }
+        })
+        .catch(error => console.error('Error fetching messages:', error));
+}
+
+function createMessageElement(message) {
+    const div = document.createElement('div');
+    div.className = 'message-item animate-fadeIn';
+    // Simplified message creation - expand based on your needs
+    div.innerHTML = `
+        <div class="max-w-xs lg:max-w-md">
+            <div class="bg-white text-gray-900 rounded-xl p-4 shadow-sm">
+                <p class="text-sm">${message.message_text || 'Media message'}</p>
+            </div>
+        </div>
+    `;
+    return div;
+}
+
+// Message input functions
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    
+    // Update character count
+    const charCount = document.getElementById('charCount');
+    if (charCount) {
+        charCount.textContent = `${textarea.value.length} characters`;
+    }
+}
+
+function handleKeyDown(event) {
+    isTyping = true;
+    clearTimeout(window.typingTimer);
+    window.typingTimer = setTimeout(() => { isTyping = false; }, 1000);
+    
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        const form = event.target.closest('form');
+        const messageText = event.target.value.trim();
+        const hasFile = document.getElementById('fileInput').files.length > 0;
+        
+        if (form && (messageText || hasFile)) {
+            handleSendMessage({ target: form, preventDefault: () => {} });
+        } else {
+            if (typeof toastManager !== 'undefined') {
+                toastManager.warning('Please enter a message or attach a file');
+            }
+        }
+    }
+}
+
+function handleSendMessage(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const sendIcon = document.getElementById('sendIcon');
+    
+    // Show sending state
+    sendButton.disabled = true;
+    sendIcon.className = 'fas fa-spinner fa-spin';
+    
+    // Submit form
+    if (typeof showLoading !== 'undefined') {
+        showLoading();
+    }
+    form.submit();
+}
+
+// File handling
+function handleFileSelect(input) {
+    const file = input.files[0];
+    if (file) {
+        // Check file size
+        if (file.size > 16 * 1024 * 1024) {
+            if (typeof toastManager !== 'undefined') {
+                toastManager.error('File size must be less than 16MB');
+            }
+            input.value = '';
+            return;
+        }
+        
+        // Update preview
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = formatFileSize(file.size);
+        
+        // Set appropriate icon
+        const fileIcon = document.getElementById('fileIcon');
+        const extension = file.name.split('.').pop().toLowerCase();
+        if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
+            fileIcon.className = 'fas fa-image text-blue-500';
+        } else if (['mp4', 'mov', 'avi'].includes(extension)) {
+            fileIcon.className = 'fas fa-video text-purple-500';
+        } else if (['pdf'].includes(extension)) {
+            fileIcon.className = 'fas fa-file-pdf text-red-500';
+        } else {
+            fileIcon.className = 'fas fa-file text-gray-500';
+        }
+        
+        document.getElementById('filePreview').classList.remove('hidden');
+        if (typeof toastManager !== 'undefined') {
+            toastManager.success(`File "${file.name}" attached`);
+        }
+    }
+}
+
+function clearFile() {
+    document.getElementById('fileInput').value = '';
+    document.getElementById('filePreview').classList.add('hidden');
+    if (typeof toastManager !== 'undefined') {
+        toastManager.info('File attachment removed');
+    }
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Emoji functions
+function toggleEmojiPicker() {
+    const picker = document.getElementById('emojiPicker');
+    picker.classList.toggle('hidden');
+}
+
+function insertEmoji(emoji) {
+    const messageInput = document.getElementById('messageInput');
+    const cursorPos = messageInput.selectionStart;
+    const textBefore = messageInput.value.substring(0, cursorPos);
+    const textAfter = messageInput.value.substring(cursorPos);
+    
+    messageInput.value = textBefore + emoji + textAfter;
+    messageInput.focus();
+    messageInput.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
+    
+    autoResize(messageInput);
+    document.getElementById('emojiPicker').classList.add('hidden');
+}
+
+// Image modal
+function openImageModal(imageSrc) {
+    document.getElementById('modalImage').src = imageSrc;
+    document.getElementById('imageModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImageModal() {
+    document.getElementById('imageModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Message actions
+function replyToMessage(messageId) {
+    // Implementation for reply functionality
+    const replyPreview = document.getElementById('replyPreview');
+    const replyText = document.getElementById('replyText');
+    
+    replyText.textContent = 'Message #' + messageId;
+    replyPreview.classList.remove('hidden');
+    
+    document.getElementById('messageInput').focus();
+}
+
+function cancelReply() {
+    document.getElementById('replyPreview').classList.add('hidden');
+}
+
+function copyMessage(text) {
+    if (text) {
+        navigator.clipboard.writeText(text).then(() => {
+            if (typeof toastManager !== 'undefined') {
+                toastManager.success('Message copied to clipboard');
+            }
+        }).catch(() => {
+            if (typeof toastManager !== 'undefined') {
+                toastManager.error('Failed to copy message');
+            }
+        });
+    }
+}
+
+// Chat menu functions
+function toggleChatMenu() {
+    document.getElementById('chatDropdown').classList.toggle('hidden');
+}
+
+function toggleChatInfo() {
+    if (typeof toastManager !== 'undefined') {
+        toastManager.info('Chat info panel would be implemented here');
+    }
+}
+
+function exportChat() {
+    if (typeof toastManager !== 'undefined') {
+        toastManager.info('Chat export functionality would be implemented here');
+    }
+    toggleChatMenu();
+}
+
+function clearChat() {
+    if (confirm('Are you sure you want to clear the chat history? This cannot be undone.')) {
+        if (typeof toastManager !== 'undefined') {
+            toastManager.warning('Clear chat functionality would be implemented here');
+        }
+    }
+    toggleChatMenu();
+}
+
+function reportIssue() {
+    if (typeof toastManager !== 'undefined') {
+        toastManager.info('Issue reporting functionality would be implemented here');
+    }
+    toggleChatMenu();
+}
+
+// Admin functions
+function deleteMessageAdmin(messageId) {
+    if (confirm('Are you sure you want to delete this message? This action cannot be undone.')) {
+        if (typeof showLoading !== 'undefined') {
+            showLoading();
+        }
+        window.location.href = `/admin/delete_message/${messageId}`;
+    }
+}
+
+// Utility functions
+function scrollToBottom() {
+    const container = document.getElementById('messages-container');
+    container.scrollTop = container.scrollHeight;
+}
+
+function focusMessageInput() {
+    const input = document.getElementById('messageInput');
+    if (input) {
+        input.focus();
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    scrollToBottom();
+    
+    const messageInput = document.getElementById('messageInput');
+    if (messageInput) {
+        messageInput.focus();
+        
+        // Add typing indicator
+        messageInput.addEventListener('input', autoResize);
+    }
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#chatDropdown') && !e.target.closest('[onclick*="toggleChatMenu"]')) {
+            document.getElementById('chatDropdown').classList.add('hidden');
+        }
+        if (!e.target.closest('#emojiPicker') && !e.target.closest('[onclick*="toggleEmojiPicker"]')) {
+            document.getElementById('emojiPicker').classList.add('hidden');
+        }
+    });
+});
+
+// Start auto-refresh
+setInterval(fetchNewMessages, refreshInterval);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeImageModal();
+        document.getElementById('emojiPicker').classList.add('hidden');
+        document.getElementById('chatDropdown').classList.add('hidden');
+    }
+});
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn {
+        animation: fadeIn 0.3s ease-out;
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

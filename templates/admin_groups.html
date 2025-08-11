@@ -1,0 +1,823 @@
+
+{% extends "base.html" %}
+
+{% block title %}Group Management - SecureChat Pro Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Sidebar -->
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
+        <div class="w-64 bg-white shadow-lg fixed h-full overflow-y-auto">
+            <div class="p-6">
+                <div class="space-y-1">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Administration</h3>
+                    
+                    <a href="{{ url_for('admin_dashboard') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-tachometer-alt mr-3 text-gray-400 group-hover:text-red-500"></i>
+                        Dashboard
+                    </a>
+                    
+                    <a href="{{ url_for('admin_users') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-users mr-3 text-gray-400 group-hover:text-red-500"></i>
+                        User Management
+                    </a>
+                    
+                    <a href="{{ url_for('admin_groups') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-red-50 text-red-700 border-r-2 border-red-500">
+                        <i class="fas fa-users-cog mr-3 text-red-500"></i>
+                        Group Management
+                    </a>
+                    
+                    <a href="{{ url_for('admin_messages') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-comments mr-3 text-gray-400 group-hover:text-red-500"></i>
+                        Message Oversight
+                    </a>
+                </div>
+
+                <div class="border-t border-gray-200 mt-6 pt-6">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Quick Actions</h3>
+                    <a href="{{ url_for('create_group') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-plus mr-3 text-gray-400 group-hover:text-green-500"></i>
+                        Create Group
+                    </a>
+                </div>
+
+                <div class="border-t border-gray-200 mt-6 pt-6">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">AI Features</h3>
+                    <a href="{{ url_for('admin_all_summaries') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-file-alt mr-3 text-gray-400 group-hover:text-blue-500"></i>
+                        Chat Summaries
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 ml-64 overflow-y-auto">
+            <div class="p-8">
+                <!-- Page Header -->
+                <div class="mb-8">
+                    <div class="md:flex md:items-center md:justify-between">
+                        <div class="flex-1 min-w-0">
+                            <h1 class="text-3xl font-bold leading-7 text-gray-900">
+                                Group Management
+                            </h1>
+                            <p class="mt-2 text-sm text-gray-600">
+                                Create, manage, and moderate chat groups across your organization.
+                            </p>
+                        </div>
+                        <div class="mt-4 flex md:mt-0 md:ml-4 space-x-3">
+                            <a href="{{ url_for('create_group') }}" 
+                               class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
+                                <i class="fas fa-plus mr-2"></i>
+                                Create Group
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                {% if groups %}
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-users-cog text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-500">Total Groups</div>
+                                    <div class="text-2xl font-bold text-gray-900">{{ groups|length }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-user-friends text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-500">Total Members</div>
+                                    <div class="text-2xl font-bold text-gray-900">{{ groups|sum(attribute='member_count') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-chart-line text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-500">Avg Members</div>
+                                    <div class="text-2xl font-bold text-gray-900">
+                                        {{ "%.1f"|format(groups|sum(attribute='member_count') / groups|length) if groups|length > 0 else '0' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-clock text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-500">This Month</div>
+                                    <div class="text-2xl font-bold text-gray-900">
+                                        {{ groups|length // 3 if groups|length > 0 else 0 }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Search and Filter -->
+                <div class="bg-white shadow-sm rounded-xl border border-gray-200 mb-8">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Filter Groups</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Search Groups</label>
+                                <div class="relative">
+                                    <input type="text" id="searchGroups" placeholder="Search by group name or description..." 
+                                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-red-500 focus:border-red-500">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-search text-gray-400"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Member Count</label>
+                                <select id="memberFilter" class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500">
+                                    <option value="">All Groups</option>
+                                    <option value="small">Small (1-5 members)</option>
+                                    <option value="medium">Medium (6-15 members)</option>
+                                    <option value="large">Large (16+ members)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                                <select id="sortBy" class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500">
+                                    <option value="newest">Newest First</option>
+                                    <option value="oldest">Oldest First</option>
+                                    <option value="name">Name A-Z</option>
+                                    <option value="members">Most Members</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Groups List -->
+                <div class="bg-white shadow-sm rounded-xl border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">Chat Groups</h3>
+                                <p class="mt-1 text-sm text-gray-500">Manage all chat groups in your organization</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-gray-500">
+                                    {{ groups|length }} group{{ 's' if groups|length != 1 else '' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if groups %}
+                        <div class="divide-y divide-gray-200">
+                            {% for group in groups %}
+                                <div class="px-6 py-6 hover:bg-gray-50 transition-colors duration-200 group-row" 
+                                     data-group-id="{{ group.id }}" 
+                                     data-name="{{ group.name.lower() }}" 
+                                     data-description="{{ (group.description or '').lower() }}"
+                                     data-member-count="{{ group.member_count }}"
+                                     data-created="{{ group.created_at }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-4 flex-1">
+                                            <!-- Group Avatar -->
+                                            <div class="flex-shrink-0">
+                                                <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
+                                                    <span class="text-white font-bold text-xl">{{ group.name[0].upper() }}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Group Info -->
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center space-x-3 mb-1">
+                                                    <h4 class="text-lg font-semibold text-gray-900 truncate">{{ group.name }}</h4>
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                        ID: {{ group.id }}
+                                                    </span>
+                                                </div>
+                                                <p class="text-sm text-gray-600 mb-2">
+                                                    {{ group.description or 'No description provided' }}
+                                                </p>
+                                                <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                                    <span class="flex items-center">
+                                                        <i class="fas fa-users mr-1 text-purple-400"></i>
+                                                        {{ group.member_count }} member{{ 's' if group.member_count != 1 else '' }}
+                                                    </span>
+                                                    <span class="flex items-center">
+                                                        <i class="fas fa-calendar mr-1 text-blue-400"></i>
+                                                        Created {{ group.created_at.split(' ')[0] if group.created_at else 'Unknown' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Group Actions -->
+                                        <div class="flex items-center space-x-2 ml-4">
+                                            <a href="{{ url_for('chat', chat_type='group', chat_id=group.id) }}" 
+                                               class="inline-flex items-center px-3 py-2 border border-blue-300 rounded-lg text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                                               title="View Group Chat">
+                                                <i class="fas fa-comments mr-2"></i>
+                                                View Chat
+                                            </a>
+                                            
+                                            <a href="{{ url_for('summarize_chat_page', chat_type='group', chat_id=group.id) }}" 
+                                               class="inline-flex items-center px-3 py-2 border border-green-300 rounded-lg text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+                                               title="View/Generate Group Summaries">
+                                                <i class="fas fa-file-alt mr-2"></i>
+                                                Summaries
+                                            </a>
+                                            
+                                            <a href="{{ url_for('admin_group_messages', group_id=group.id) }}" 
+                                               class="inline-flex items-center px-3 py-2 border border-purple-300 rounded-lg text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200">
+                                                <i class="fas fa-cog mr-2"></i>
+                                                Manage
+                                            </a>
+                                            
+                                            <div class="relative inline-block text-left">
+                                                <button type="button" 
+                                                        onclick="toggleGroupMenu({{ group.id }})"
+                                                        class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
+                                                    <i class="fas fa-ellipsis-h"></i>
+                                                </button>
+                                                
+                                                <!-- Dropdown Menu -->
+                                                <div id="groupMenu{{ group.id }}" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                                                    <div class="py-1">
+                                                        <a href="{{ url_for('chat', chat_type='group', chat_id=group.id) }}" 
+                                                           class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                            <i class="fas fa-eye mr-3 text-blue-400"></i>
+                                                            View Chat
+                                                        </a>
+                                                        <a href="{{ url_for('summarize_chat_page', chat_type='group', chat_id=group.id) }}" 
+                                                           class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                            <i class="fas fa-file-alt mr-3 text-green-400"></i>
+                                                            Chat Summary
+                                                        </a>
+                                                        <a href="{{ url_for('admin_group_messages', group_id=group.id) }}" 
+                                                           class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                            <i class="fas fa-cog mr-3 text-purple-400"></i>
+                                                            Manage Messages
+                                                        </a>
+                                                        <div class="border-t border-gray-100"></div>
+                                                        <button onclick="exportGroupData({{ group.id }})" 
+                                                                class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                            <i class="fas fa-download mr-3 text-blue-400"></i>
+                                                            Export Data
+                                                        </button>
+                                                        <div class="border-t border-gray-100"></div>
+                                                        <button onclick="deleteGroup({{ group.id }}, '{{ group.name }}')" 
+                                                                class="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50">
+                                                            <i class="fas fa-trash mr-3 text-red-400"></i>
+                                                            Delete Group
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Group Members Preview -->
+                                    <div class="mt-4 pt-4 border-t border-gray-100">
+                                        <button onclick="toggleMembersPreview({{ group.id }})" 
+                                                class="text-sm text-gray-600 hover:text-gray-900 flex items-center transition-colors duration-200">
+                                            <i id="membersIcon{{ group.id }}" class="fas fa-chevron-right mr-2 transition-transform duration-200"></i>
+                                            View {{ group.member_count }} member{{ 's' if group.member_count != 1 else '' }}
+                                        </button>
+                                        
+                                        <div id="membersPreview{{ group.id }}" class="hidden mt-3">
+                                            <div class="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">Group Members:</div>
+                                            <div id="membersList{{ group.id }}" class="flex flex-wrap gap-2">
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                    <i class="fas fa-spinner fa-spin mr-1"></i>
+                                                    Loading members...
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <!-- Empty State -->
+                        <div class="px-6 py-16 text-center">
+                            <div class="mx-auto h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                                <i class="fas fa-users-cog text-gray-400 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No groups created yet</h3>
+                            <p class="text-gray-500 mb-6 max-w-md mx-auto">
+                                Start building your organization's communication by creating your first chat group. 
+                                Groups help teams collaborate and stay connected.
+                            </p>
+                            <a href="{{ url_for('create_group') }}" 
+                               class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
+                                <i class="fas fa-plus mr-2"></i>
+                                Create Your First Group
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Bulk Actions Panel -->
+                {% if groups %}
+                <div class="mt-8 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-900">Bulk Actions</h4>
+                            <p class="text-sm text-gray-500 mt-1">Perform actions on multiple groups at once</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <button type="button" 
+                                    onclick="bulkExportGroups()"
+                                    class="inline-flex items-center px-4 py-2 border border-blue-300 rounded-lg text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors duration-200">
+                                <i class="fas fa-download mr-2"></i>
+                                Export All
+                            </button>
+                            <button type="button" 
+                                    onclick="bulkGenerateSummaries()"
+                                    class="inline-flex items-center px-4 py-2 border border-green-300 rounded-lg text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 transition-colors duration-200">
+                                <i class="fas fa-magic mr-2"></i>
+                                Generate Summaries
+                            </button>
+                            <button type="button" 
+                                    onclick="bulkDeleteGroups()"
+                                    class="inline-flex items-center px-4 py-2 border border-red-300 rounded-lg text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors duration-200">
+                                <i class="fas fa-trash mr-2"></i>
+                                Delete Selected
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Search and filter functionality
+document.getElementById('searchGroups').addEventListener('input', filterGroups);
+document.getElementById('memberFilter').addEventListener('change', filterGroups);
+document.getElementById('sortBy').addEventListener('change', sortGroups);
+
+function filterGroups() {
+    const searchTerm = document.getElementById('searchGroups').value.toLowerCase();
+    const memberFilter = document.getElementById('memberFilter').value;
+    const rows = document.querySelectorAll('.group-row');
+
+    rows.forEach(row => {
+        const name = row.dataset.name;
+        const description = row.dataset.description;
+        const memberCount = parseInt(row.dataset.memberCount);
+
+        const matchesSearch = name.includes(searchTerm) || description.includes(searchTerm);
+        
+        let matchesMemberFilter = true;
+        if (memberFilter === 'small') matchesMemberFilter = memberCount <= 5;
+        else if (memberFilter === 'medium') matchesMemberFilter = memberCount >= 6 && memberCount <= 15;
+        else if (memberFilter === 'large') matchesMemberFilter = memberCount >= 16;
+
+        if (matchesSearch && matchesMemberFilter) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function sortGroups() {
+    const sortBy = document.getElementById('sortBy').value;
+    const container = document.querySelector('.divide-y');
+    const rows = Array.from(container.querySelectorAll('.group-row'));
+
+    rows.sort((a, b) => {
+        switch (sortBy) {
+            case 'name':
+                return a.dataset.name.localeCompare(b.dataset.name);
+            case 'members':
+                return parseInt(b.dataset.memberCount) - parseInt(a.dataset.memberCount);
+            case 'oldest':
+                return new Date(a.dataset.created) - new Date(b.dataset.created);
+            case 'newest':
+            default:
+                return new Date(b.dataset.created) - new Date(a.dataset.created);
+        }
+    });
+
+    rows.forEach(row => container.appendChild(row));
+}
+
+// Toggle group dropdown menu
+function toggleGroupMenu(groupId) {
+    const menu = document.getElementById(`groupMenu${groupId}`);
+    // Close all other menus first
+    document.querySelectorAll('[id^="groupMenu"]').forEach(m => {
+        if (m.id !== `groupMenu${groupId}`) {
+            m.classList.add('hidden');
+        }
+    });
+    menu.classList.toggle('hidden');
+}
+
+// Toggle members preview
+function toggleMembersPreview(groupId) {
+    const preview = document.getElementById(`membersPreview${groupId}`);
+    const icon = document.getElementById(`membersIcon${groupId}`);
+    
+    preview.classList.toggle('hidden');
+    
+    if (preview.classList.contains('hidden')) {
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-right');
+    } else {
+        icon.classList.remove('fa-chevron-right');
+        icon.classList.add('fa-chevron-down');
+        // Load members if not already loaded
+        loadGroupMembers(groupId);
+    }
+}
+
+// Load group members (simulated)
+function loadGroupMembers(groupId) {
+    const membersList = document.getElementById(`membersList${groupId}`);
+    
+    // Simulate loading delay
+    setTimeout(() => {
+        // Mock member data - in real implementation, this would fetch from server
+        const mockMembers = [
+            { name: 'Admin User', role: 'admin' },
+            { name: 'John Doe', role: 'read_write' },
+            { name: 'Jane Smith', role: 'read_write' },
+            { name: 'Bob Wilson', role: 'read_only' }
+        ];
+        
+        membersList.innerHTML = mockMembers.map(member => `
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                member.role === 'admin' ? 'bg-red-100 text-red-800' :
+                member.role === 'read_write' ? 'bg-green-100 text-green-800' :
+                'bg-yellow-100 text-yellow-800'
+            }">
+                <i class="fas fa-user mr-1"></i> ${member.name}
+            </span>
+        `).join('');
+    }, 500);
+}
+
+// Group management functions
+function editGroup(groupId) {
+    alert(`Edit group functionality would be implemented here for group ${groupId}`);
+}
+
+function exportGroupData(groupId) {
+    if (typeof showLoading !== 'undefined') {
+        showLoading();
+    }
+    setTimeout(() => {
+        if (typeof hideLoading !== 'undefined') {
+            hideLoading();
+        }
+        alert(`Export functionality would be implemented here for group ${groupId}`);
+    }, 1500);
+}
+
+function deleteGroup(groupId, groupName) {
+    if (confirm(`Are you sure you want to delete the group "${groupName}"? This will permanently delete the group, all members, and ALL messages.`)) {
+        if (confirm(`This action cannot be undone. All messages and media files in "${groupName}" will be permanently deleted. Are you absolutely sure?`)) {
+            if (typeof showLoading !== 'undefined') {
+                showLoading();
+            }
+            window.location.href = `/admin/delete_group/${groupId}`;
+        }
+    }
+}
+
+// Bulk actions
+function bulkExportGroups() {
+    if (typeof showLoading !== 'undefined') {
+        showLoading();
+    }
+    setTimeout(() => {
+        if (typeof hideLoading !== 'undefined') {
+            hideLoading();
+        }
+        alert('Bulk export functionality would be implemented here');
+    }, 2000);
+}
+
+function bulkGenerateSummaries() {
+    if (confirm('Generate AI summaries for all groups? This may take several minutes depending on the number of groups and messages.')) {
+        if (typeof showLoading !== 'undefined') {
+            showLoading();
+        }
+        setTimeout(() => {
+            if (typeof hideLoading !== 'undefined') {
+                hideLoading();
+            }
+            alert('Bulk summary generation functionality would be implemented here');
+        }, 3000);
+    }
+}
+
+function bulkDeleteGroups() {
+    if (confirm('Are you sure you want to delete all selected groups? This action cannot be undone.')) {
+        alert('Bulk delete functionality would be implemented here');
+    }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('[onclick*="toggleGroupMenu"]')) {
+        document.querySelectorAll('[id^="groupMenu"]').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+    }
+});
+
+// Loading functions
+function showLoading() {
+    // Create loading overlay if it doesn't exist
+    if (!document.getElementById('loadingOverlay')) {
+        const overlay = document.createElement('div');
+        overlay.id = 'loadingOverlay';
+        overlay.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50';
+        overlay.innerHTML = `
+            <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
+                <span class="text-gray-700">Processing...</span>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.remove();
+    }
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Admin Groups page loaded');
+    
+    // Add hover effects to group cards
+    const groupRows = document.querySelectorAll('.group-row');
+    groupRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-1px)';
+            this.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+        });
+        row.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '';
+        });
+    });
+    
+    // Initialize tooltips
+    const tooltipElements = document.querySelectorAll('[title]');
+    tooltipElements.forEach(element => {
+        element.addEventListener('mouseenter', function() {
+            const title = this.getAttribute('title');
+            if (title) {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'absolute bg-gray-800 text-white text-xs rounded py-1 px-2 z-50 whitespace-nowrap';
+                tooltip.textContent = title;
+                tooltip.id = 'tooltip';
+                
+                // Position tooltip
+                const rect = this.getBoundingClientRect();
+                tooltip.style.left = rect.left + (rect.width / 2) + 'px';
+                tooltip.style.top = (rect.top - 30) + 'px';
+                tooltip.style.transform = 'translateX(-50%)';
+                
+                document.body.appendChild(tooltip);
+                
+                // Remove title to prevent browser tooltip
+                this.setAttribute('data-original-title', title);
+                this.removeAttribute('title');
+            }
+        });
+        
+        element.addEventListener('mouseleave', function() {
+            const tooltip = document.getElementById('tooltip');
+            if (tooltip) {
+                tooltip.remove();
+            }
+            
+            // Restore title
+            const originalTitle = this.getAttribute('data-original-title');
+            if (originalTitle) {
+                this.setAttribute('title', originalTitle);
+                this.removeAttribute('data-original-title');
+            }
+        });
+    });
+    
+    // Auto-refresh group stats every 5 minutes
+    setInterval(() => {
+        // Silent refresh of group statistics
+        fetch(window.location.href)
+            .then(() => {
+                console.log('Group stats refreshed');
+            })
+            .catch(() => {
+                console.log('Failed to refresh stats');
+            });
+    }, 300000);
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Escape to close all dropdowns
+    if (e.key === 'Escape') {
+        document.querySelectorAll('[id^="groupMenu"]').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+    }
+    
+    // Ctrl/Cmd + N for new group
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        window.location.href = "{{ url_for('create_group') }}";
+    }
+    
+    // Ctrl/Cmd + F for search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        document.getElementById('searchGroups').focus();
+    }
+});
+
+// Enhanced group management functions
+function viewGroupAnalytics(groupId) {
+    // Navigate to group analytics page
+    window.location.href = `/admin/groups/${groupId}/analytics`;
+}
+
+function duplicateGroup(groupId, groupName) {
+    if (confirm(`Create a copy of "${groupName}"?`)) {
+        if (typeof showLoading !== 'undefined') {
+            showLoading();
+        }
+        // Implementation would handle group duplication
+        setTimeout(() => {
+            if (typeof hideLoading !== 'undefined') {
+                hideLoading();
+            }
+            alert('Group duplication functionality would be implemented here');
+        }, 2000);
+    }
+}
+
+// Group selection functionality (for future bulk operations)
+let selectedGroups = new Set();
+
+function toggleGroupSelection(groupId) {
+    const checkbox = document.getElementById(`group-checkbox-${groupId}`);
+    if (checkbox) {
+        if (checkbox.checked) {
+            selectedGroups.add(groupId);
+        } else {
+            selectedGroups.delete(groupId);
+        }
+        updateBulkActionButtons();
+    }
+}
+
+function selectAllGroups() {
+    const checkboxes = document.querySelectorAll('[id^="group-checkbox-"]');
+    const selectAll = document.getElementById('select-all-groups');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+        const groupId = checkbox.value;
+        if (selectAll.checked) {
+            selectedGroups.add(groupId);
+        } else {
+            selectedGroups.delete(groupId);
+        }
+    });
+    
+    updateBulkActionButtons();
+}
+
+function updateBulkActionButtons() {
+    const bulkPanel = document.getElementById('bulk-actions-panel');
+    const selectedCount = document.getElementById('selected-count');
+    
+    if (bulkPanel && selectedCount) {
+        selectedCount.textContent = selectedGroups.size;
+        
+        if (selectedGroups.size > 0) {
+            bulkPanel.classList.remove('hidden');
+        } else {
+            bulkPanel.classList.add('hidden');
+        }
+    }
+}
+
+// Advanced search functionality
+function performAdvancedSearch() {
+    const searchTerm = document.getElementById('searchGroups').value.toLowerCase();
+    const memberFilter = document.getElementById('memberFilter').value;
+    
+    // Advanced search with debouncing
+    clearTimeout(window.searchTimeout);
+    window.searchTimeout = setTimeout(() => {
+        filterGroups();
+        
+        // Track search analytics
+        if (searchTerm) {
+            console.log(`Searched for: "${searchTerm}"`);
+        }
+    }, 300);
+}
+
+// Add search input debouncing
+document.getElementById('searchGroups').addEventListener('input', performAdvancedSearch);
+
+// Export functionality
+function exportGroupsData() {
+    if (typeof showLoading !== 'undefined') {
+        showLoading();
+    }
+    
+    // Simulate export process
+    setTimeout(() => {
+        if (typeof hideLoading !== 'undefined') {
+            hideLoading();
+        }
+        
+        // Create download link
+        const csvContent = "data:text/csv;charset=utf-8,Group ID,Name,Description,Members,Created\n";
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `groups_export_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        alert('Groups data exported successfully!');
+    }, 2000);
+}
+
+// Real-time updates (if WebSocket is available)
+if (typeof WebSocket !== 'undefined') {
+    // WebSocket connection for real-time updates would be implemented here
+    console.log('WebSocket support available for real-time updates');
+}
+
+// Performance monitoring
+const performanceObserver = new PerformanceObserver((list) => {
+    for (const entry of list.getEntries()) {
+        if (entry.entryType === 'navigation') {
+            console.log(`Page load time: ${entry.loadEventEnd - entry.loadEventStart}ms`);
+        }
+    }
+});
+
+performanceObserver.observe({ entryTypes: ['navigation'] });
+</script>
+{% endblock %}

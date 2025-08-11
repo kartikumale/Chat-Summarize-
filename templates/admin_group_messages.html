@@ -1,0 +1,515 @@
+{% extends "base.html" %}
+
+{% block title %}{{ group.name }} - Message Management - SecureChat Pro Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Sidebar -->
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
+        <div class="w-64 bg-white shadow-lg fixed h-full overflow-y-auto">
+            <div class="p-6">
+                <div class="space-y-1">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Administration</h3>
+                    
+                    <a href="{{ url_for('admin_dashboard') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-tachometer-alt mr-3 text-gray-400 group-hover:text-red-500"></i>
+                        Dashboard
+                    </a>
+                    
+                    <a href="{{ url_for('admin_users') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-users mr-3 text-gray-400 group-hover:text-red-500"></i>
+                        User Management
+                    </a>
+                    
+                    <a href="{{ url_for('admin_groups') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-red-50 text-red-700 border-r-2 border-red-500">
+                        <i class="fas fa-users-cog mr-3 text-red-500"></i>
+                        Group Management
+                    </a>
+                    
+                    <a href="{{ url_for('admin_messages') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-comments mr-3 text-gray-400 group-hover:text-red-500"></i>
+                        Message Oversight
+                    </a>
+                </div>
+
+                <div class="border-t border-gray-200 mt-6 pt-6">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Quick Actions</h3>
+                    <a href="{{ url_for('create_group') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-plus mr-3 text-gray-400 group-hover:text-green-500"></i>
+                        Create Group
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 ml-64 overflow-y-auto">
+            <div class="p-8">
+                <!-- Page Header -->
+                <div class="mb-8">
+                    <div class="md:flex md:items-center md:justify-between">
+                        <div class="flex-1 min-w-0">
+                            <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-2">
+                                <a href="{{ url_for('admin_groups') }}" class="hover:text-gray-700">Groups</a>
+                                <i class="fas fa-chevron-right"></i>
+                                <span class="text-gray-900">{{ group.name }}</span>
+                            </nav>
+                            <h1 class="text-3xl font-bold leading-7 text-gray-900">
+                                {{ group.name }}
+                            </h1>
+                            <p class="mt-2 text-sm text-gray-600">
+                                {{ group.description or 'No description provided' }}
+                            </p>
+                            <div class="mt-2 flex items-center space-x-4 text-sm text-gray-500">
+                                <span class="flex items-center">
+                                    <i class="fas fa-users mr-1 text-purple-400"></i>
+                                    {{ members|length }} member{{ 's' if members|length != 1 else '' }}
+                                </span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-calendar mr-1 text-blue-400"></i>
+                                    Created {{ group.created_at.split(' ')[0] if group.created_at else 'Unknown' }}
+                                </span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-comments mr-1 text-green-400"></i>
+                                    {{ total_messages }} message{{ 's' if total_messages != 1 else '' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex md:mt-0 md:ml-4 space-x-3">
+                            <a href="{{ url_for('chat', chat_type='group', chat_id=group.id) }}" 
+                               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
+                                <i class="fas fa-comments mr-2"></i>
+                                View Chat
+                            </a>
+                            <a href="{{ url_for('admin_groups') }}" 
+                               class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                Back to Groups
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-comments text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-500">Total Messages</div>
+                                    <div class="text-2xl font-bold text-gray-900">{{ total_messages }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-users text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-500">Members</div>
+                                    <div class="text-2xl font-bold text-gray-900">{{ members|length }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-edit text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-500">Can Write</div>
+                                    <div class="text-2xl font-bold text-gray-900">{{ members|selectattr('role', 'equalto', 'read_write')|list|length }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-paperclip text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-500">With Media</div>
+                                    <div class="text-2xl font-bold text-gray-900">{{ messages|selectattr('media_filename')|list|length }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group Members Summary -->
+                <div class="bg-white shadow-sm rounded-xl border border-gray-200 mb-8">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="fas fa-users mr-2 text-purple-500"></i> 
+                            Group Members ({{ members|length }})
+                        </h3>
+                        <p class="mt-1 text-sm text-gray-500">Current members and their permissions</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {% for member in members %}
+                                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
+                                            <span class="text-sm font-medium text-white">{{ member.username[0].upper() }}</span>
+                                        </div>
+                                        <span class="font-medium text-gray-900">{{ member.username }}</span>
+                                    </div>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {% if member.role == 'read_write' %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                        {% if member.role == 'read_write' %}
+                                            <i class="fas fa-edit mr-1"></i> Write
+                                        {% else %}
+                                            <i class="fas fa-eye mr-1"></i> Read Only
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search and Filter Controls -->
+                <div class="bg-white shadow-sm rounded-xl border border-gray-200 mb-8">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Filter Messages</h3>
+                        <p class="mt-1 text-sm text-gray-500">Search and filter group messages</p>
+                    </div>
+                    <div class="p-6">
+                        <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Search Messages</label>
+                                <div class="relative">
+                                    <input type="text" name="search" value="{{ request.args.get('search', '') }}" 
+                                           placeholder="Search message content or username..."
+                                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-purple-500 focus:border-purple-500">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-search text-gray-400"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">From Date</label>
+                                <input type="date" name="date_from" value="{{ request.args.get('date_from', '') }}"
+                                       class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500">
+                            </div>
+                            <div class="flex items-end space-x-2">
+                                <button type="submit" class="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors duration-200">
+                                    <i class="fas fa-search mr-2"></i> Filter
+                                </button>
+                                {% if request.args.get('search') or request.args.get('date_from') %}
+                                    <a href="{{ url_for('admin_group_messages', group_id=group.id) }}" 
+                                       class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Bulk Actions Warning -->
+                <div class="bg-red-50 border border-red-200 rounded-xl p-6 mb-8">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="font-medium text-red-800 flex items-center">
+                                <i class="fas fa-exclamation-triangle mr-2"></i> 
+                                Dangerous Actions
+                            </h4>
+                            <p class="text-sm text-red-700 mt-1">
+                                These actions permanently delete data and cannot be undone.
+                            </p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <button type="button" onclick="bulkDeleteAllMessages()" 
+                                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors duration-200">
+                                <i class="fas fa-trash mr-2"></i> Delete All Messages
+                            </button>
+                            <button type="button" onclick="deleteEntireGroup()" 
+                                    class="inline-flex items-center px-4 py-2 bg-red-800 text-white rounded-lg text-sm font-medium hover:bg-red-900 transition-colors duration-200">
+                                <i class="fas fa-users-slash mr-2"></i> Delete Entire Group
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages List -->
+                <div class="bg-white shadow-sm rounded-xl border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                                    <i class="fas fa-comments mr-2 text-purple-500"></i> 
+                                    Group Messages
+                                </h3>
+                                <p class="mt-1 text-sm text-gray-500">
+                                    {{ total_messages }} total message{{ 's' if total_messages != 1 else '' }}
+                                    {% if request.args.get('search') or request.args.get('date_from') %}
+                                        (filtered)
+                                    {% endif %}
+                                </p>
+                            </div>
+                            
+                            <!-- Pagination Info -->
+                            {% set total_pages = (total_messages + per_page - 1) // per_page %}
+                            {% if total_pages > 1 %}
+                                <div class="text-sm text-gray-600">
+                                    Page {{ page }} of {{ total_pages }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if messages %}
+                        <div class="divide-y divide-gray-200">
+                            {% for message in messages %}
+                                <div class="px-6 py-6 hover:bg-gray-50 transition-colors duration-200">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex items-start space-x-4 flex-1">
+                                            <!-- User Avatar -->
+                                            <div class="flex-shrink-0">
+                                                <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
+                                                    <span class="text-sm font-medium text-white">{{ message.sender_username[0].upper() }}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Message Content -->
+                                            <div class="flex-1 min-w-0">
+                                                <!-- Message Header -->
+                                                <div class="flex items-center space-x-3 mb-2">
+                                                    <span class="font-medium text-gray-900">{{ message.sender_username }}</span>
+                                                    <span class="text-xs text-gray-500">{{ message.created_at.split('.')[0] if message.created_at else 'Unknown' }}</span>
+                                                    <span class="text-xs text-gray-400">ID: {{ message.id }}</span>
+                                                </div>
+                                                
+                                                <!-- Media Content -->
+                                                {% if message.media_filename %}
+                                                    <div class="mb-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                                        <div class="flex items-center justify-between">
+                                                            <div class="flex items-center">
+                                                                <i class="fas fa-paperclip mr-2 text-blue-600"></i>
+                                                                <span class="font-medium text-blue-800">Media File:</span>
+                                                                <a href="{{ url_for('uploaded_file', filename=message.media_filename) }}" 
+                                                                   class="text-blue-600 hover:text-blue-800 ml-2 underline" target="_blank">
+                                                                    {{ message.media_filename.split('_', 2)[-1] if '_' in message.media_filename else message.media_filename }}
+                                                                </a>
+                                                            </div>
+                                                            <span class="text-xs text-gray-500 bg-white px-2 py-1 rounded">{{ message.media_type.upper() if message.media_type else '' }}</span>
+                                                        </div>
+                                                        
+                                                        <!-- Preview for images -->
+                                                        {% if message.media_type in ['jpg', 'jpeg', 'png', 'gif'] %}
+                                                            <div class="mt-2">
+                                                                <img src="{{ url_for('uploaded_file', filename=message.media_filename) }}" 
+                                                                     alt="Message image" class="max-w-xs max-h-48 rounded border cursor-pointer" 
+                                                                     onclick="openImageModal('{{ url_for('uploaded_file', filename=message.media_filename) }}')">
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endif %}
+                                                
+                                                <!-- Text Content -->
+                                                {% if message.message_text %}
+                                                    <div class="text-gray-800 bg-gray-50 p-3 rounded-lg border-l-4 border-gray-500">
+                                                        <span class="text-xs text-gray-500 uppercase tracking-wide font-medium">Message Content:</span>
+                                                        <p class="mt-1 whitespace-pre-wrap">{{ message.message_text }}</p>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Actions -->
+                                        <div class="flex items-center space-x-2 ml-4">
+                                            <button onclick="deleteMessage({{ message.id }})" 
+                                                    class="inline-flex items-center px-3 py-1 border border-red-300 rounded-lg text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors duration-200"
+                                                    title="Delete this message">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if total_pages > 1 %}
+                            <div class="px-6 py-4 border-t border-gray-200">
+                                <div class="flex justify-center">
+                                    <div class="flex space-x-1">
+                                        {% if page > 1 %}
+                                            <a href="{{ url_for('admin_group_messages', group_id=group.id, page=page-1, **request.args) }}" 
+                                               class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                                                <i class="fas fa-chevron-left"></i>
+                                            </a>
+                                        {% endif %}
+                                        
+                                        {% for p in range(1, total_pages + 1) %}
+                                            {% if p == page %}
+                                                <span class="px-3 py-2 bg-purple-600 text-white rounded-lg">{{ p }}</span>
+                                            {% elif p <= 3 or p >= total_pages - 2 or (p >= page - 1 and p <= page + 1) %}
+                                                <a href="{{ url_for('admin_group_messages', group_id=group.id, page=p, **request.args) }}" 
+                                                   class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">{{ p }}</a>
+                                            {% elif p == 4 or p == total_pages - 3 %}
+                                                <span class="px-3 py-2 text-gray-500">...</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        {% if page < total_pages %}
+                                            <a href="{{ url_for('admin_group_messages', group_id=group.id, page=page+1, **request.args) }}" 
+                                               class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                    {% else %}
+                        <div class="px-6 py-16 text-center">
+                            <div class="mx-auto h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                                <i class="fas fa-comments text-gray-400 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No messages found</h3>
+                            {% if request.args.get('search') or request.args.get('date_from') %}
+                                <p class="text-gray-500 mb-4">Try adjusting your search filters.</p>
+                                <a href="{{ url_for('admin_group_messages', group_id=group.id) }}" class="text-purple-600 hover:text-purple-500 font-medium">
+                                    <i class="fas fa-times mr-1"></i> Clear Filters
+                                </a>
+                            {% else %}
+                                <p class="text-gray-500">This group hasn't received any messages yet.</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50 flex items-center justify-center" onclick="closeImageModal()">
+    <div class="max-w-4xl max-h-full p-4">
+        <img id="modalImage" src="" alt="Full size image" class="max-w-full max-h-full object-contain rounded">
+        <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
+
+<script>
+function deleteMessage(messageId) {
+    if (confirm('Are you sure you want to delete this message? This action cannot be undone and will also remove any associated media files.')) {
+        showLoading();
+        window.location.href = `/admin/delete_group_message/${messageId}`;
+    }
+}
+
+function bulkDeleteAllMessages() {
+    const groupName = "{{ group.name }}";
+    const messageCount = {{ total_messages }};
+    
+    if (confirm(`⚠️ DANGER: You are about to delete ALL ${messageCount} messages in the group "${groupName}".
+
+This action will:
+• Permanently delete all ${messageCount} messages
+• Remove all associated media files
+• Cannot be undone
+
+Are you absolutely sure you want to continue?`)) {
+        
+        const confirmText = prompt(`To confirm this destructive action, type "DELETE ALL MESSAGES" below:`);
+        
+        if (confirmText === "DELETE ALL MESSAGES") {
+            showLoading();
+            // Create a form and submit it
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/bulk_delete_group_messages/{{ group.id }}`;
+            document.body.appendChild(form);
+            form.submit();
+        } else if (confirmText !== null) {
+            alert('Confirmation text did not match. Action cancelled.');
+        }
+    }
+}
+
+function deleteEntireGroup() {
+    const groupName = "{{ group.name }}";
+    const memberCount = {{ members|length }};
+    const messageCount = {{ total_messages }};
+    
+    if (confirm(`🚨 EXTREME DANGER: You are about to delete the ENTIRE group "${groupName}".
+
+This action will PERMANENTLY DELETE:
+• The group "${groupName}" itself
+• All ${memberCount} group members
+• All ${messageCount} messages
+• All associated media files
+• All group history and data
+
+This action CANNOT be undone and will affect all group members.
+
+Are you absolutely certain you want to proceed?`)) {
+        
+        const confirmText = prompt(`This is your final warning. To confirm deletion of the entire group "${groupName}", type "DELETE ENTIRE GROUP" below:`);
+        
+        if (confirmText === "DELETE ENTIRE GROUP") {
+            showLoading();
+            window.location.href = `/admin/delete_group/{{ group.id }}`;
+        } else if (confirmText !== null) {
+            alert('Confirmation text did not match. Group deletion cancelled.');
+        }
+    }
+}
+
+// Image modal functions
+function openImageModal(imageSrc) {
+    document.getElementById('modalImage').src = imageSrc;
+    document.getElementById('imageModal').classList.remove('hidden');
+}
+
+function closeImageModal() {
+    document.getElementById('imageModal').classList.add('hidden');
+}
+
+// Loading functions
+function showLoading() {
+    // Show loading indicator
+    document.body.style.cursor = 'wait';
+}
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeImageModal();
+    }
+});
+</script>
+{% endblock %}

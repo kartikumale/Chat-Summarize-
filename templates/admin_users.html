@@ -1,0 +1,462 @@
+
+{% extends "base.html" %}
+
+{% block title %}User Management - SecureChat Pro Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Sidebar -->
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
+        <div class="w-64 bg-white shadow-lg fixed h-full overflow-y-auto">
+            <div class="p-6">
+                <div class="space-y-1">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Administration</h3>
+                    
+                    <a href="{{ url_for('admin_dashboard') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-tachometer-alt mr-3 text-gray-400 group-hover:text-red-500"></i>
+                        Dashboard
+                    </a>
+                    
+                    <a href="{{ url_for('admin_users') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-red-50 text-red-700 border-r-2 border-red-500">
+                        <i class="fas fa-users mr-3 text-red-500"></i>
+                        User Management
+                    </a>
+                    
+                    <a href="{{ url_for('admin_groups') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-users-cog mr-3 text-gray-400 group-hover:text-red-500"></i>
+                        Group Management
+                    </a>
+                    
+                    <a href="{{ url_for('admin_messages') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-comments mr-3 text-gray-400 group-hover:text-red-500"></i>
+                        Message Oversight
+                    </a>
+                </div>
+
+                <div class="border-t border-gray-200 mt-6 pt-6">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Quick Actions</h3>
+                    <a href="{{ url_for('create_group') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-plus mr-3 text-gray-400 group-hover:text-green-500"></i>
+                        Create Group
+                    </a>
+                </div>
+
+                <div class="border-t border-gray-200 mt-6 pt-6">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">AI Features</h3>
+                    <a href="{{ url_for('admin_all_summaries') }}" 
+                       class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-file-alt mr-3 text-gray-400 group-hover:text-blue-500"></i>
+                        Chat Summaries
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 ml-64 overflow-y-auto">
+            <div class="p-8">
+                <!-- Page Header -->
+                <div class="mb-8">
+                    <div class="md:flex md:items-center md:justify-between">
+                        <div class="flex-1 min-w-0">
+                            <h1 class="text-3xl font-bold leading-7 text-gray-900">
+                                User Management
+                            </h1>
+                            <p class="mt-2 text-sm text-gray-600">
+                                Manage user accounts, permissions, and security settings across your chat system.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-users text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-500">Total Users</div>
+                                    <div class="text-2xl font-bold text-gray-900">{{ users|length }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-check-circle text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-500">Active Users</div>
+                                    <div class="text-2xl font-bold text-gray-900">{{ users|rejectattr('is_blocked')|list|length }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-user-slash text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-500">Blocked Users</div>
+                                    <div class="text-2xl font-bold text-gray-900">{{ users|selectattr('is_blocked')|list|length }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-user-plus text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-500">New This Month</div>
+                                    <div class="text-2xl font-bold text-gray-900">{{ users|length // 4 if users|length > 0 else 0 }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search and Filter -->
+                <div class="bg-white shadow-sm rounded-xl border border-gray-200 mb-8">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Filter Users</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Search Users</label>
+                                <div class="relative">
+                                    <input type="text" id="searchUsers" placeholder="Search by username or email..." 
+                                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-red-500 focus:border-red-500">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-search text-gray-400"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Status Filter</label>
+                                <select id="statusFilter" class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500">
+                                    <option value="">All Users</option>
+                                    <option value="active">Active Only</option>
+                                    <option value="blocked">Blocked Only</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                                <select id="sortBy" class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500">
+                                    <option value="newest">Newest First</option>
+                                    <option value="oldest">Oldest First</option>
+                                    <option value="username">Username A-Z</option>
+                                    <option value="email">Email A-Z</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Table -->
+                <div class="bg-white shadow-sm rounded-xl border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">User Accounts</h3>
+                                <p class="mt-1 text-sm text-gray-500">Manage user permissions and account status</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button type="button" onclick="selectAllUsers()" class="text-sm text-red-600 hover:text-red-500 font-medium">
+                                    Select All
+                                </button>
+                                <span class="text-gray-300">|</span>
+                                <button type="button" onclick="bulkActions()" class="text-sm text-gray-600 hover:text-gray-500 font-medium">
+                                    Bulk Actions
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if users %}
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            User
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Contact
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Status
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Joined
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for user in users %}
+                                        <tr class="hover:bg-gray-50 transition-colors duration-200 user-row" data-user-id="{{ user.id }}" data-status="{{ 'blocked' if user.is_blocked else 'active' }}" data-username="{{ user.username.lower() }}" data-email="{{ user.email.lower() }}">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <input type="checkbox" class="user-checkbox rounded border-gray-300 text-red-600 focus:ring-red-500" value="{{ user.id }}">
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="flex-shrink-0 h-10 w-10">
+                                                        <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                                                            <span class="text-sm font-medium text-white">{{ user.username[0].upper() }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900">{{ user.username }}</div>
+                                                        <div class="text-sm text-gray-500">ID: {{ user.id }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ user.email }}</div>
+                                                <div class="text-sm text-gray-500">
+                                                    <i class="fas fa-envelope mr-1"></i>
+                                                    Email verified
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                {% if user.is_blocked %}
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                        <i class="fas fa-ban mr-1"></i>
+                                                        Blocked
+                                                    </span>
+                                                {% else %}
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                        <i class="fas fa-check-circle mr-1"></i>
+                                                        Active
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <div>{{ user.created_at.split(' ')[0] if user.created_at else 'Unknown' }}</div>
+                                                <div class="text-xs text-gray-400">{{ user.created_at.split(' ')[1].split('.')[0] if user.created_at else '' }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <div class="flex items-center space-x-2">
+                                                    <a href="{{ url_for('chat', chat_type='private', chat_id=user.id) }}" 
+                                                       class="inline-flex items-center px-2 py-1 border border-blue-300 rounded-md text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors duration-200"
+                                                       title="View Chat Messages">
+                                                        <i class="fas fa-comments mr-1"></i>
+                                                        Chat
+                                                    </a>
+                                                    <a href="{{ url_for('summarize_chat_page', chat_type='private', chat_id=user.id) }}" 
+                                                       class="inline-flex items-center px-2 py-1 border border-purple-300 rounded-md text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors duration-200"
+                                                       title="View/Generate Chat Summaries">
+                                                        <i class="fas fa-file-alt mr-1"></i>
+                                                        Summary
+                                                    </a>
+                                                    <a href="{{ url_for('toggle_user_block', user_id=user.id) }}" 
+                                                       class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 {% if user.is_blocked %}border border-green-300 text-green-700 bg-green-50 hover:bg-green-100{% else %}border border-red-300 text-red-700 bg-red-50 hover:bg-red-100{% endif %}"
+                                                       onclick="return confirm('Are you sure you want to {% if user.is_blocked %}unblock{% else %}block{% endif %} {{ user.username }}?')">
+                                                        {% if user.is_blocked %}
+                                                            <i class="fas fa-unlock mr-1"></i>
+                                                            Unblock
+                                                        {% else %}
+                                                            <i class="fas fa-ban mr-1"></i>
+                                                            Block
+                                                        {% endif %}
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="px-6 py-16 text-center">
+                            <div class="mx-auto h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                                <i class="fas fa-users text-gray-400 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+                            <p class="text-gray-500">Get started by adding your first user to the system.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Bulk Actions Panel -->
+                {% if users %}
+                <div id="bulkActionsPanel" class="hidden mt-8 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-900">Bulk Actions</h4>
+                            <p class="text-sm text-gray-500 mt-1">Perform actions on <span id="selectedCount">0</span> selected users</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <button type="button" onclick="bulkBlock()" class="inline-flex items-center px-4 py-2 border border-red-300 rounded-lg text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors duration-200">
+                                <i class="fas fa-ban mr-2"></i>
+                                Block Selected
+                            </button>
+                            <button type="button" onclick="bulkUnblock()" class="inline-flex items-center px-4 py-2 border border-green-300 rounded-lg text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 transition-colors duration-200">
+                                <i class="fas fa-unlock mr-2"></i>
+                                Unblock Selected
+                            </button>
+                            <button type="button" onclick="clearSelection()" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-times mr-2"></i>
+                                Clear Selection
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Search and filter functionality
+document.getElementById('searchUsers').addEventListener('input', filterUsers);
+document.getElementById('statusFilter').addEventListener('change', filterUsers);
+document.getElementById('sortBy').addEventListener('change', sortUsers);
+
+function filterUsers() {
+    const searchTerm = document.getElementById('searchUsers').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const rows = document.querySelectorAll('.user-row');
+
+    rows.forEach(row => {
+        const username = row.dataset.username;
+        const email = row.dataset.email;
+        const status = row.dataset.status;
+
+        const matchesSearch = username.includes(searchTerm) || email.includes(searchTerm);
+        const matchesStatus = !statusFilter || status === statusFilter;
+
+        if (matchesSearch && matchesStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function sortUsers() {
+    const sortBy = document.getElementById('sortBy').value;
+    const tbody = document.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('.user-row'));
+
+    rows.sort((a, b) => {
+        switch (sortBy) {
+            case 'username':
+                return a.dataset.username.localeCompare(b.dataset.username);
+            case 'email':
+                return a.dataset.email.localeCompare(b.dataset.email);
+            case 'oldest':
+                return a.dataset.userId - b.dataset.userId; // Assuming lower ID = older
+            case 'newest':
+            default:
+                return b.dataset.userId - a.dataset.userId; // Assuming higher ID = newer
+        }
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+// Selection functionality
+document.getElementById('selectAll').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = this.checked;
+    });
+    updateSelectedCount();
+});
+
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('user-checkbox')) {
+        updateSelectedCount();
+    }
+});
+
+function updateSelectedCount() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const count = selectedCheckboxes.length;
+    document.getElementById('selectedCount').textContent = count;
+    
+    const bulkPanel = document.getElementById('bulkActionsPanel');
+    if (count > 0) {
+        bulkPanel.classList.remove('hidden');
+    } else {
+        bulkPanel.classList.add('hidden');
+    }
+    
+    // Update select all checkbox state
+    const allCheckboxes = document.querySelectorAll('.user-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAll');
+    selectAllCheckbox.indeterminate = count > 0 && count < allCheckboxes.length;
+    selectAllCheckbox.checked = count === allCheckboxes.length;
+}
+
+function selectAllUsers() {
+    document.getElementById('selectAll').checked = true;
+    document.getElementById('selectAll').dispatchEvent(new Event('change'));
+}
+
+function clearSelection() {
+    document.getElementById('selectAll').checked = false;
+    document.getElementById('selectAll').dispatchEvent(new Event('change'));
+}
+
+function bulkBlock() {
+    const selectedUsers = getSelectedUserIds();
+    if (selectedUsers.length === 0) return;
+    
+    if (confirm(`Are you sure you want to block ${selectedUsers.length} user(s)?`)) {
+        // Implementation would go here
+        alert('Bulk block functionality would be implemented here');
+    }
+}
+
+function bulkUnblock() {
+    const selectedUsers = getSelectedUserIds();
+    if (selectedUsers.length === 0) return;
+    
+    if (confirm(`Are you sure you want to unblock ${selectedUsers.length} user(s)?`)) {
+        // Implementation would go here
+        alert('Bulk unblock functionality would be implemented here');
+    }
+}
+
+function getSelectedUserIds() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    return Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+}
+</script>
+{% endblock %}

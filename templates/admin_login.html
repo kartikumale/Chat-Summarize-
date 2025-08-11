@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - SecureChat Pro{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-admin-50 to-admin-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <!-- Header -->
+        <div class="text-center">
+            <div class="mx-auto h-20 w-20 bg-admin-600 rounded-2xl flex items-center justify-center shadow-lg mb-6">
+                <i class="fas fa-shield-alt text-white text-3xl"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Admin Access</h2>
+            <p class="text-sm text-gray-600">Sign in to the administrative panel</p>
+            <div class="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-admin-100 text-admin-800">
+                <i class="fas fa-lock mr-1"></i>
+                Restricted Access
+            </div>
+        </div>
+
+        <!-- Admin Login Form -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 space-y-6 border-2 border-admin-200">
+            <!-- Security Notice -->
+            <div class="bg-admin-50 border border-admin-200 rounded-xl p-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-admin-500 mt-0.5"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-admin-800">Security Notice</h3>
+                        <p class="mt-1 text-xs text-admin-600">
+                            This is a restricted area. All access attempts are logged and monitored.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST" class="space-y-6" onsubmit="handleAdminLogin(event)">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user-shield mr-2 text-admin-500"></i>Admin Username
+                    </label>
+                    <div class="relative">
+                        <input type="text" 
+                               name="username" 
+                               id="username"
+                               required 
+                               class="appearance-none relative block w-full px-4 py-3 pl-12 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-admin-500 focus:border-admin-500 transition-colors duration-200"
+                               placeholder="Enter admin username">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-user-shield text-admin-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-key mr-2 text-admin-500"></i>Admin Password
+                    </label>
+                    <div class="relative">
+                        <input type="password" 
+                               name="password" 
+                               id="password"
+                               required 
+                               class="appearance-none relative block w-full px-4 py-3 pl-12 pr-12 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-admin-500 focus:border-admin-500 transition-colors duration-200"
+                               placeholder="Enter admin password">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-key text-admin-400"></i>
+                        </div>
+                        <button type="button" 
+                                onclick="togglePassword('password')"
+                                class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600">
+                            <i id="passwordToggleIcon" class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Additional Security Options -->
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        <input id="secure_session" 
+                               name="secure_session" 
+                               type="checkbox" 
+                               checked
+                               class="h-4 w-4 text-admin-600 focus:ring-admin-500 border-gray-300 rounded">
+                        <label for="secure_session" class="ml-3 block text-sm text-gray-700">
+                            <i class="fas fa-shield-alt mr-1 text-admin-500"></i>
+                            Enhanced security mode
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <input id="log_session" 
+                               name="log_session" 
+                               type="checkbox" 
+                               checked
+                               disabled
+                               class="h-4 w-4 text-admin-600 focus:ring-admin-500 border-gray-300 rounded opacity-50">
+                        <label for="log_session" class="ml-3 block text-sm text-gray-500">
+                            <i class="fas fa-clipboard-list mr-1"></i>
+                            Log this session (required)
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" 
+                            id="adminLoginBtn"
+                            class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-admin-600 hover:bg-admin-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-admin-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <i id="adminLoginIcon" class="fas fa-sign-in-alt text-admin-500 group-hover:text-admin-400"></i>
+                        </span>
+                        <span id="adminLoginText">Admin Sign In</span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Divider -->
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-white text-gray-500">Need help?</span>
+                </div>
+            </div>
+
+            <!-- Support Links -->
+            <div class="space-y-3">
+                <div class="text-center">
+                    <a href="{{ url_for('login') }}" 
+                       class="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-500 transition-colors duration-200">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Back to User Login
+                    </a>
+                </div>
+                
+                <div class="text-center">
+                    <button onclick="showAdminHelp()" 
+                            class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200">
+                        <i class="fas fa-question-circle mr-2"></i>
+                        Admin Access Help
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Default Credentials Notice (for development) -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-yellow-500"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Development Mode</h3>
+                    <p class="mt-1 text-xs text-yellow-600">
+                        Default credentials: <code class="bg-yellow-100 px-2 py-1 rounded">admin / admin123</code>
+                        <br><strong>Change these immediately in production!</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-xs text-gray-500">
+            <p>© 2024 SecureChat Pro Admin Panel. All rights reserved.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById('passwordToggleIcon');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+
+function handleAdminLogin(event) {
+    const btn = document.getElementById('adminLoginBtn');
+    const icon = document.getElementById('adminLoginIcon');
+    const text = document.getElementById('adminLoginText');
+    
+    // Show loading state
+    btn.disabled = true;
+    icon.className = 'fas fa-spinner fa-spin';
+    text.textContent = 'Authenticating...';
+    
+    // The form will submit normally, this just provides visual feedback
+    showLoading();
+}
+
+function showAdminHelp() {
+    toastManager.info('Contact your system administrator for admin access credentials and support.');
+}
+
+// Form validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const username = document.getElementById('username');
+    const password = document.getElementById('password');
+    
+    form.addEventListener('submit', function(e) {
+        if (!username.value.trim()) {
+            e.preventDefault();
+            toastManager.error('Admin username is required');
+            username.focus();
+            return;
+        }
+        
+        if (!password.value) {
+            e.preventDefault();
+            toastManager.error('Admin password is required');
+            password.focus();
+            return;
+        }
+        
+        // Additional admin validation could go here
+        if (username.value.length < 4) {
+            e.preventDefault();
+            toastManager.error('Invalid admin credentials format');
+            username.focus();
+            return;
+        }
+    });
+    
+    // Security warning on focus
+    username.addEventListener('focus', function() {
+        if (!this.hasAttribute('data-warned')) {
+            toastManager.warning('You are accessing a restricted administrative area. All actions are logged.');
+            this.setAttribute('data-warned', 'true');
+        }
+    });
+    
+    // Focus first input
+    username.focus();
+});
+</script>
+{% endblock %}

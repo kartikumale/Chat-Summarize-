@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Register - SecureChat Pro{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <!-- Header -->
+        <div class="text-center">
+            <div class="mx-auto h-20 w-20 bg-primary-600 rounded-2xl flex items-center justify-center shadow-lg mb-6">
+                <i class="fas fa-user-plus text-white text-3xl"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
+            <p class="text-sm text-gray-600">Join SecureChat Pro for secure communication</p>
+        </div>
+
+        <!-- Registration Form -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+            <form method="POST" class="space-y-6" onsubmit="handleRegister(event)" id="registerForm">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user mr-2 text-gray-400"></i>Username
+                    </label>
+                    <div class="relative">
+                        <input type="text" 
+                               name="username" 
+                               id="username"
+                               required 
+                               class="appearance-none relative block w-full px-4 py-3 pl-12 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200"
+                               placeholder="Choose a username">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-user text-gray-400"></i>
+                        </div>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Must be unique and at least 3 characters long</p>
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-envelope mr-2 text-gray-400"></i>Email Address
+                    </label>
+                    <div class="relative">
+                        <input type="email" 
+                               name="email" 
+                               id="email"
+                               required 
+                               class="appearance-none relative block w-full px-4 py-3 pl-12 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200"
+                               placeholder="Enter your email address">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock mr-2 text-gray-400"></i>Password
+                    </label>
+                    <div class="relative">
+                        <input type="password" 
+                               name="password" 
+                               id="password"
+                               required 
+                               class="appearance-none relative block w-full px-4 py-3 pl-12 pr-12 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200"
+                               placeholder="Create a secure password">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <button type="button" 
+                                onclick="togglePassword('password')"
+                                class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600">
+                            <i id="passwordToggleIcon" class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <!-- Password Strength Indicator -->
+                    <div class="mt-2">
+                        <div class="flex space-x-1">
+                            <div id="strength1" class="h-1 flex-1 bg-gray-200 rounded"></div>
+                            <div id="strength2" class="h-1 flex-1 bg-gray-200 rounded"></div>
+                            <div id="strength3" class="h-1 flex-1 bg-gray-200 rounded"></div>
+                            <div id="strength4" class="h-1 flex-1 bg-gray-200 rounded"></div>
+                        </div>
+                        <p id="strengthText" class="text-xs text-gray-500 mt-1">Password strength</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock mr-2 text-gray-400"></i>Confirm Password
+                    </label>
+                    <div class="relative">
+                        <input type="password" 
+                               name="confirm_password" 
+                               id="confirm_password"
+                               required 
+                               class="appearance-none relative block w-full px-4 py-3 pl-12 pr-12 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200"
+                               placeholder="Confirm your password">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <button type="button" 
+                                onclick="togglePassword('confirm_password')"
+                                class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600">
+                            <i id="confirmPasswordToggleIcon" class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div id="passwordMatch" class="mt-1 text-xs text-gray-500">Passwords must match</div>
+                </div>
+
+                <div class="flex items-start">
+                    <div class="flex items-center h-5">
+                        <input id="terms" 
+                               name="terms" 
+                               type="checkbox" 
+                               required
+                               class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label for="terms" class="text-gray-700">
+                            I agree to the 
+                            <a href="#" class="font-medium text-primary-600 hover:text-primary-500">Terms of Service</a> 
+                            and 
+                            <a href="#" class="font-medium text-primary-600 hover:text-primary-500">Privacy Policy</a>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" 
+                            id="registerBtn"
+                            class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <i id="registerIcon" class="fas fa-user-plus text-primary-500 group-hover:text-primary-400"></i>
+                        </span>
+                        <span id="registerText">Create Account</span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Divider -->
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-white text-gray-500">Already have an account?</span>
+                </div>
+            </div>
+
+            <!-- Sign In Link -->
+            <div class="text-center">
+                <a href="{{ url_for('login') }}" 
+                   class="inline-flex items-center font-medium text-primary-600 hover:text-primary-500 transition-colors duration-200">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Sign in to your account
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-xs text-gray-500">
+            <p>© 2024 SecureChat Pro. All rights reserved.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const iconId = inputId === 'password' ? 'passwordToggleIcon' : 'confirmPasswordToggleIcon';
+    const icon = document.getElementById(iconId);
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+
+function checkPasswordStrength(password) {
+    let strength = 0;
+    const indicators = ['strength1', 'strength2', 'strength3', 'strength4'];
+    const strengthText = document.getElementById('strengthText');
+    
+    // Reset
+    indicators.forEach(id => {
+        document.getElementById(id).className = 'h-1 flex-1 bg-gray-200 rounded';
+    });
+    
+    // Check criteria
+    if (password.length >= 6) strength++;
+    if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+    if (password.match(/\d/)) strength++;
+    if (password.match(/[^a-zA-Z\d]/)) strength++;
+    
+    // Update visual indicators
+    const colors = ['bg-red-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
+    const texts = ['Very Weak', 'Weak', 'Good', 'Strong'];
+    
+    for (let i = 0; i < strength; i++) {
+        document.getElementById(indicators[i]).className = `h-1 flex-1 ${colors[strength - 1]} rounded`;
+    }
+    
+    if (strength > 0) {
+        strengthText.textContent = texts[strength - 1];
+        strengthText.className = `text-xs mt-1 ${strength < 2 ? 'text-red-500' : strength < 3 ? 'text-yellow-500' : strength < 4 ? 'text-blue-500' : 'text-green-500'}`;
+    } else {
+        strengthText.textContent = 'Password strength';
+        strengthText.className = 'text-xs text-gray-500 mt-1';
+    }
+}
+
+function checkPasswordMatch() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    const matchDiv = document.getElementById('passwordMatch');
+    
+    if (confirmPassword === '') {
+        matchDiv.textContent = 'Passwords must match';
+        matchDiv.className = 'mt-1 text-xs text-gray-500';
+    } else if (password === confirmPassword) {
+        matchDiv.textContent = 'Passwords match ✓';
+        matchDiv.className = 'mt-1 text-xs text-green-500';
+    } else {
+        matchDiv.textContent = 'Passwords do not match ✗';
+        matchDiv.className = 'mt-1 text-xs text-red-500';
+    }
+}
+
+function handleRegister(event) {
+    const btn = document.getElementById('registerBtn');
+    const icon = document.getElementById('registerIcon');
+    const text = document.getElementById('registerText');
+    
+    // Show loading state
+    btn.disabled = true;
+    icon.className = 'fas fa-spinner fa-spin';
+    text.textContent = 'Creating Account...';
+    
+    // The form will submit normally, this just provides visual feedback
+    showLoading();
+}
+
+// Form validation and real-time feedback
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registerForm');
+    const username = document.getElementById('username');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+    const terms = document.getElementById('terms');
+    
+    // Password strength checking
+    password.addEventListener('input', function() {
+        checkPasswordStrength(this.value);
+        if (confirmPassword.value) {
+            checkPasswordMatch();
+        }
+    });
+    
+    // Password match checking
+    confirmPassword.addEventListener('input', checkPasswordMatch);
+    
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        // Username validation
+        if (username.value.trim().length < 3) {
+            e.preventDefault();
+            toastManager.error('Username must be at least 3 characters long');
+            username.focus();
+            return;
+        }
+        
+        // Email validation
+        if (!email.value.includes('@')) {
+            e.preventDefault();
+            toastManager.error('Please enter a valid email address');
+            email.focus();
+            return;
+        }
+        
+        // Password validation
+        if (password.value.length < 6) {
+            e.preventDefault();
+            toastManager.error('Password must be at least 6 characters long');
+            password.focus();
+            return;
+        }
+        
+        // Password match validation
+        if (password.value !== confirmPassword.value) {
+            e.preventDefault();
+            toastManager.error('Passwords do not match');
+            confirmPassword.focus();
+            return;
+        }
+        
+        // Terms validation
+        if (!terms.checked) {
+            e.preventDefault();
+            toastManager.error('You must agree to the Terms of Service and Privacy Policy');
+            terms.focus();
+            return;
+        }
+    });
+    
+    // Focus first input
+    username.focus();
+});
+</script>
+{% endblock %}
