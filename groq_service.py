@@ -10,57 +10,57 @@ except ImportError:
 
 class GroqChatSummarizer:
     def __init__(self):
+        self.fallback_summarizer = MockGroqChatSummarizer()  # Always have fallback available
+
         if not GROQ_AVAILABLE:
             self.client = None
             self.model = None
-            print("Warning: Groq summarization disabled - library not available")
+            print("Warning: Groq summarization disabled - library not available. Using mock summarizer.")
             return
-            
+
         api_key = os.getenv('GROQ_API_KEY')
         if not api_key:
             self.client = None
             self.model = None
-            print("Warning: GROQ_API_KEY not found in environment variables")
+            print("Warning: GROQ_API_KEY not found in environment variables. Using mock summarizer.")
             return
-            
+
         try:
-            # Try different initialization methods for compatibility
-            try:
-                # Method 1: Direct initialization (recommended for newer versions)
-                self.client = Groq(api_key=api_key)
-            except TypeError as e:
-                if "proxies" in str(e):
-                    # Method 2: Try without any extra parameters
-                    try:
-                        import groq
-                        self.client = groq.Client(api_key=api_key)
-                    except:
-                        # Method 3: Basic initialization
-                        self.client = Groq()
-                        self.client.api_key = api_key
-                else:
-                    # Method 4: Fallback for older versions
-                    self.client = Groq()
-                    self.client.api_key = api_key
-            
-            self.model = "llama3-8b-8192"  # You can use other models like "mixtral-8x7b-32768"
-            print("Groq client initialized successfully")
-            
-            # Simple test to verify the client works
-            try:
-                test_response = self.client.chat.completions.create(
-                    messages=[{"role": "user", "content": "Hello"}],
-                    model=self.model,
-                    temperature=0.1,
-                    max_tokens=5
-                )
-                print("Groq API connection verified successfully")
-            except Exception as test_error:
-                print(f"Warning: Groq API test failed: {test_error}")
-                # Don't fail initialization, just warn
-                
+            # Initialize Groq client with current API
+            self.client = Groq(api_key=api_key)
+
+            # Try different models in order of preference
+            models_to_try = [
+                "llama-3.1-8b-instant",  # Fast and reliable
+                "llama3-8b-8192",        # Standard model
+                "mixtral-8x7b-32768",    # Alternative model
+                "llama3-70b-8192"        # Larger model if available
+            ]
+
+            self.model = None
+            for model in models_to_try:
+                try:
+                    # Test the model with a simple request
+                    test_response = self.client.chat.completions.create(
+                        messages=[{"role": "user", "content": "Hello"}],
+                        model=model,
+                        temperature=0.1,
+                        max_tokens=5
+                    )
+                    self.model = model
+                    print(f"Groq client initialized successfully with model: {model}")
+                    print("Groq API connection verified successfully")
+                    break
+                except Exception as model_test_error:
+                    print(f"Model {model} not available: {model_test_error}")
+                    continue
+
+            if self.model is None:
+                print("Warning: No working Groq models found. Using mock summarizer.")
+                self.client = None
+
         except Exception as e:
-            print(f"Error initializing Groq client: {e}")
+            print(f"Error initializing Groq client: {e}. Using mock summarizer.")
             self.client = None
             self.model = None
     
@@ -100,42 +100,43 @@ class GroqChatSummarizer:
     
     def generate_summary(self, messages: List[Dict], chat_type: str, chat_name: str, summary_length: str = "medium") -> Optional[str]:
         """
-        Generate a summary of chat messages using Groq API
-        
+        Generate a summary of chat messages using Groq API or fallback to mock
+
         Args:
             messages: List of message dictionaries
             chat_type: "private" or "group"
             chat_name: Name of the chat/group
             summary_length: "short", "medium", or "detailed"
-        
+
         Returns:
             Generated summary text or None if failed
         """
         if not self.is_available():
-            return "AI summarization is currently unavailable. Please check your Groq API configuration."
-        
+            # Use fallback summarizer
+            return self.fallback_summarizer.generate_summary(messages, chat_type, chat_name, summary_length)
+
         try:
             if not messages:
                 return "No messages to summarize."
-            
+
             # Prepare messages text
             messages_text = self.prepare_messages_for_summary(messages, chat_type, chat_name)
-            
+
             # Limit message length to prevent API limits
             if len(messages_text) > 8000:  # Conservative limit
                 messages_text = messages_text[:8000] + "\n...[Message truncated due to length]"
-            
+
             # Define summary length prompts
             length_prompts = {
                 "short": "Provide a brief 2-3 sentence summary focusing on the main topics discussed.",
                 "medium": "Provide a comprehensive summary in 1-2 paragraphs covering key topics, decisions, and important points.",
                 "detailed": "Provide a detailed summary with multiple paragraphs covering all major topics, key decisions, important announcements, and notable conversations."
             }
-            
+
             # Create the prompt
-            system_prompt = f"""You are an AI assistant that creates helpful summaries of chat conversations. 
+            system_prompt = f"""You are an AI assistant that creates helpful summaries of chat conversations.
             Analyze the following {'group' if chat_type == 'group' else 'private'} chat messages and create a summary.
-            
+
             Instructions:
             - {length_prompts.get(summary_length, length_prompts['medium'])}
             - Focus on meaningful content and skip casual greetings
@@ -145,9 +146,9 @@ class GroqChatSummarizer:
             - If the chat contains mostly casual conversation, mention that
             - Preserve important dates, numbers, or specific details mentioned
             """
-            
+
             user_prompt = f"Please summarize this chat conversation:\n\n{messages_text}"
-            
+
             # Make API call to Groq with error handling
             try:
                 chat_completion = self.client.chat.completions.create(
@@ -159,50 +160,53 @@ class GroqChatSummarizer:
                     temperature=0.3,  # Lower temperature for more consistent summaries
                     max_tokens=1000,  # Adjust based on your needs
                 )
-                
+
                 return chat_completion.choices[0].message.content.strip()
-                
+
             except Exception as api_error:
-                print(f"Groq API error: {api_error}")
-                return f"Error generating summary: {str(api_error)}"
-            
+                print(f"Groq API error: {api_error}. Falling back to mock summarizer.")
+                # Fallback to mock summarizer on API error
+                return self.fallback_summarizer.generate_summary(messages, chat_type, chat_name, summary_length)
+
         except Exception as e:
-            print(f"Error generating summary with Groq: {e}")
-            return f"Error generating summary: {str(e)}"
+            print(f"Error generating summary with Groq: {e}. Falling back to mock summarizer.")
+            # Fallback to mock summarizer on any error
+            return self.fallback_summarizer.generate_summary(messages, chat_type, chat_name, summary_length)
     
     def generate_summary_with_focus(self, messages: List[Dict], chat_type: str, chat_name: str, focus_areas: List[str] = None) -> Optional[str]:
         """
-        Generate a summary with specific focus areas
-        
+        Generate a summary with specific focus areas using Groq API or fallback to mock
+
         Args:
             messages: List of message dictionaries
             chat_type: "private" or "group"
             chat_name: Name of the chat/group
             focus_areas: List of specific areas to focus on (e.g., ["decisions", "action_items", "problems"])
-        
+
         Returns:
             Generated summary text or None if failed
         """
         if not self.is_available():
-            return "AI summarization is currently unavailable. Please check your Groq API configuration."
-        
+            # Use fallback summarizer
+            return self.fallback_summarizer.generate_summary_with_focus(messages, chat_type, chat_name, focus_areas)
+
         try:
             if not messages:
                 return "No messages to summarize."
-            
+
             messages_text = self.prepare_messages_for_summary(messages, chat_type, chat_name)
-            
+
             # Limit message length to prevent API limits
             if len(messages_text) > 8000:
                 messages_text = messages_text[:8000] + "\n...[Message truncated due to length]"
-            
+
             focus_instruction = ""
             if focus_areas:
                 focus_instruction = f"Pay special attention to: {', '.join(focus_areas)}. "
-            
+
             system_prompt = f"""You are an AI assistant that creates focused summaries of chat conversations.
             Analyze the following {'group' if chat_type == 'group' else 'private'} chat messages and create a summary.
-            
+
             Instructions:
             - {focus_instruction}Create a well-structured summary
             - Use bullet points or numbered lists when appropriate
@@ -210,9 +214,9 @@ class GroqChatSummarizer:
             - Include relevant dates and participants when important
             - Be concise but comprehensive
             """
-            
+
             user_prompt = f"Please create a focused summary of this chat conversation:\n\n{messages_text}"
-            
+
             try:
                 chat_completion = self.client.chat.completions.create(
                     messages=[
@@ -223,16 +227,18 @@ class GroqChatSummarizer:
                     temperature=0.3,
                     max_tokens=1200,
                 )
-                
+
                 return chat_completion.choices[0].message.content.strip()
-                
+
             except Exception as api_error:
-                print(f"Groq API error in focused summary: {api_error}")
-                return f"Error generating focused summary: {str(api_error)}"
-            
+                print(f"Groq API error in focused summary: {api_error}. Falling back to mock summarizer.")
+                # Fallback to mock summarizer on API error
+                return self.fallback_summarizer.generate_summary_with_focus(messages, chat_type, chat_name, focus_areas)
+
         except Exception as e:
-            print(f"Error generating focused summary with Groq: {e}")
-            return f"Error generating focused summary: {str(e)}"
+            print(f"Error generating focused summary with Groq: {e}. Falling back to mock summarizer.")
+            # Fallback to mock summarizer on any error
+            return self.fallback_summarizer.generate_summary_with_focus(messages, chat_type, chat_name, focus_areas)
 
 # Mock summarizer for testing when Groq is not available
 class MockGroqChatSummarizer:

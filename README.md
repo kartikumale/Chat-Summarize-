@@ -131,4 +131,26 @@ A default administrator account is created by the `schema.sql` script.
 
 > **🚨 CRITICAL SECURITY NOTICE:** You must change the default admin password immediately after your first login, especially if you plan to deploy this application anywhere other than your local machine.
 
+
+How to install
+
+python version 3.12.6
+
+https://www.python.org/downloads/windows/
+
+git clone https://github.com/YashChikhale2002/ChatApplication.git .
+
+python -m venv venv
+
+.\venv\Scripts\Activate
+
+pip install -r requirements.txt
+
+py .\app.py
+
+python flask, tailwind css, database sql lite 3, groq API, 
+
+
+
+
 -----

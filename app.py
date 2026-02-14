@@ -6,7 +6,13 @@ from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory
-from PIL import Image
+try:
+    from PIL import Image
+    PIL_AVAILABLE = True
+except ImportError:
+    print("Warning: PIL (Pillow) not available. Image resizing disabled.")
+    PIL_AVAILABLE = False
+    Image = None
 from dotenv import load_dotenv
 from groq_service import GroqChatSummarizer
 import json
@@ -433,7 +439,7 @@ def send_message():
                 media_type = filename.rsplit('.', 1)[1].lower()
                 
                 # Resize images if they're too large
-                if media_type in ['jpg', 'jpeg', 'png']:
+                if media_type in ['jpg', 'jpeg', 'png'] and PIL_AVAILABLE:
                     try:
                         with Image.open(file_path) as img:
                             if img.width > 1920 or img.height > 1080:
@@ -441,6 +447,8 @@ def send_message():
                                 img.save(file_path, optimize=True, quality=85)
                     except Exception as e:
                         print(f"Error resizing image: {e}")
+                elif media_type in ['jpg', 'jpeg', 'png'] and not PIL_AVAILABLE:
+                    print("Warning: Image resizing disabled - PIL not available")
                         
             except Exception as e:
                 flash('Error uploading file. Please try again.')
